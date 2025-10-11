@@ -76,7 +76,6 @@ export const getAuthErrorMessage = (error: AuthError): string => {
     }
 }
 
-
 // Provider component for authentication
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { auth, firestore } = useFirebase();
@@ -95,6 +94,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log('🔵 onAuthStateChanged:', user?.email || 'No user');
       setUser(user);
       if (user) {
         const userRef = doc(firestore, 'users', user.uid);
@@ -119,18 +119,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
     }
     
+    console.log('🔵 Verificando redirect result...');
     redirectResultHandled.current = true;
-    setLoading(true);
 
     const handleRedirect = async () => {
         try {
             const result = await getRedirectResult(auth);
+            console.log('🔵 Redirect result:', result?.user?.email || 'No result');
+            
             if (result?.user) {
                 const user = result.user;
                 const userRef = doc(firestore, "users", user.uid);
                 
                 const docSnap = await getDoc(userRef);
                 if (!docSnap.exists()) {
+                    console.log('🔵 Creando usuario en Firestore...');
                     await setDoc(
                         userRef,
                         {
@@ -143,22 +146,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                         },
                         { merge: true }
                     );
+                    console.log('✅ Usuario creado');
+                } else {
+                    console.log('✅ Usuario ya existe');
                 }
+                
                 toast({
                     title: `¡Bienvenido, ${user.displayName || user.email}!`,
                     description: "Has iniciado sesión correctamente.",
                 });
             }
         } catch (error) {
-            console.error('Error en getRedirectResult:', error);
+            console.error('❌ Error en getRedirectResult:', error);
             const message = getAuthErrorMessage(error as AuthError);
             toast({
                 variant: 'destructive',
                 title: 'Error de inicio de sesión',
                 description: message,
             });
-        } finally {
-           setLoading(false);
         }
     };
     
@@ -167,8 +172,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [auth, firestore, toast]);
 
   const signInWithGoogle = async () => {
+    console.log('🔵 Iniciando signInWithGoogle...');
     if (!auth) throw new Error('Firebase Auth is not initialized');
     const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({
+      prompt: 'select_account'
+    });
+    console.log('🔵 Llamando a signInWithRedirect...');
     await signInWithRedirect(auth, provider);
   };
 
@@ -195,6 +205,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       { merge: true }
     );
   };
+  
   const signInWithEmail = async (email: string, pass: string) => {
     if (!auth) throw new Error('Firebase Auth is not initialized');
     return signInWithEmailAndPassword(auth, email, pass);
