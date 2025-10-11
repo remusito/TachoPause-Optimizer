@@ -1,11 +1,7 @@
-
 'use client';
-
 import React from 'react';
 import {
   PayPalButtons,
-  OnApproveData,
-  OnApproveActions,
   usePayPalScriptReducer,
 } from '@paypal/react-paypal-js';
 import { useAuth } from '@/firebase';
@@ -17,15 +13,12 @@ const PayPalButtonComponent: React.FC = () => {
   const { toast } = useToast();
   const [{ isPending }] = usePayPalScriptReducer();
 
-  const handleApprove = async (
-    data: OnApproveData,
-    actions: OnApproveActions
-  ) => {
+  const handleApprove = async (data: any, actions: any) => {
     try {
       if (actions.order) {
         const details = await actions.order.capture();
         console.log('Pago capturado:', details);
-
+        
         // Safely call purchasePremium
         if (purchasePremium) {
           await purchasePremium();
@@ -37,7 +30,6 @@ const PayPalButtonComponent: React.FC = () => {
         } else {
            throw new Error('La función de compra no está disponible.');
         }
-
       } else {
         throw new Error('No se pudo capturar la orden de PayPal.');
       }
@@ -67,7 +59,7 @@ const PayPalButtonComponent: React.FC = () => {
               {
                 description: 'Suscripción Premium TachoPause Optimizer',
                 amount: {
-                  value: '1.99', // El precio de tu suscripción
+                  value: '1.99',
                   currency_code: 'EUR',
                 },
               },
