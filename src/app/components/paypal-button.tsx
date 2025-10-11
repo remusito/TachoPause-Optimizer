@@ -19,7 +19,6 @@ const PayPalButtonComponent: React.FC = () => {
         const details = await actions.order.capture();
         console.log('Pago capturado:', details);
         
-        // Safely call purchasePremium
         if (purchasePremium) {
           await purchasePremium();
           toast({
@@ -55,6 +54,7 @@ const PayPalButtonComponent: React.FC = () => {
         style={{ layout: 'vertical', color: 'blue', shape: 'rect', label: 'pay' }}
         createOrder={(data, actions) => {
           return actions.order.create({
+            intent: 'CAPTURE',
             purchase_units: [
               {
                 description: 'Suscripción Premium TachoPause Optimizer',
@@ -87,5 +87,4 @@ const PayPalButtonComponent: React.FC = () => {
   );
 };
 
-// Memoize the component to prevent re-renders that close the PayPal modal
 export const PayPalButton = React.memo(PayPalButtonComponent);
