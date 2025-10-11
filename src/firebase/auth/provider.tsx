@@ -1,14 +1,13 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, useRef } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import {
   onAuthStateChanged,
   GoogleAuthProvider,
-  signInWithRedirect,
+  signInWithPopup,
   signOut as firebaseSignOut,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  getRedirectResult,
   type Auth,
   type User,
   type AuthError,
@@ -84,7 +83,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isPremium, setIsPremium] = useState(false);
   const { toast } = useToast();
   const { unlockAchievement } = useAchievements();
-  const redirectResultHandled = useRef(false);
 
   // Handle Firebase user state changes and check premium status
   useEffect(() => {
@@ -113,73 +111,57 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => unsubscribe();
   }, [auth, firestore]);
 
-  // Handle the redirect result for Google Sign-In
-  useEffect(() => {
-    if (!auth || !firestore || redirectResultHandled.current) {
-        return;
-    }
-    
-    console.log('🔵 Verificando redirect result...');
-    redirectResultHandled.current = true;
-
-    const handleRedirect = async () => {
-        try {
-            const result = await getRedirectResult(auth);
-            console.log('🔵 Redirect result:', result?.user?.email || 'No result');
-            
-            if (result?.user) {
-                const user = result.user;
-                const userRef = doc(firestore, "users", user.uid);
-                
-                const docSnap = await getDoc(userRef);
-                if (!docSnap.exists()) {
-                    console.log('🔵 Creando usuario en Firestore...');
-                    await setDoc(
-                        userRef,
-                        {
-                            uid: user.uid,
-                            email: user.email,
-                            displayName: user.displayName,
-                            photoURL: user.photoURL,
-                            createdAt: new Date().toISOString(),
-                            premium: false,
-                        },
-                        { merge: true }
-                    );
-                    console.log('✅ Usuario creado');
-                } else {
-                    console.log('✅ Usuario ya existe');
-                }
-                
-                toast({
-                    title: `¡Bienvenido, ${user.displayName || user.email}!`,
-                    description: "Has iniciado sesión correctamente.",
-                });
-            }
-        } catch (error) {
-            console.error('❌ Error en getRedirectResult:', error);
-            const message = getAuthErrorMessage(error as AuthError);
-            toast({
-                variant: 'destructive',
-                title: 'Error de inicio de sesión',
-                description: message,
-            });
-        }
-    };
-    
-    handleRedirect();
-
-  }, [auth, firestore, toast]);
-
   const signInWithGoogle = async () => {
     console.log('🔵 Iniciando signInWithGoogle...');
-    if (!auth) throw new Error('Firebase Auth is not initialized');
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({
-      prompt: 'select_account'
-    });
-    console.log('🔵 Llamando a signInWithRedirect...');
-    await signInWithRedirect(auth, provider);
+    if (!auth || !firestore) throw new Error('Firebase is not initialized');
+    
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({
+        prompt: 'select_account'
+      });
+      
+      console.log('🔵 Abriendo popup de Google...');
+      const result = await signInWithPopup(auth, provider);
+      console.log('✅ Login exitoso:', result.user.email);
+      
+      const user = result.user;
+      const userRef = doc(firestore, "users", user.uid);
+      
+      const docSnap = await getDoc(userRef);
+      if (!docSnap.exists()) {
+        console.log('🔵 Creando usuario en Firestore...');
+        await setDoc(
+          userRef,
+          {
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName,
+            photoURL: user.photoURL,
+            createdAt: new Date().toISOString(),
+            premium: false,
+          },
+          { merge: true }
+        );
+        console.log('✅ Usuario creado en Firestore');
+      } else {
+        console.log('✅ Usuario ya existe en Firestore');
+      }
+      
+      toast({
+        title: `¡Bienvenido, ${user.displayName || user.email}!`,
+        description: "Has iniciado sesión correctamente.",
+      });
+    } catch (error) {
+      console.error('❌ Error en signInWithGoogle:', error);
+      const message = getAuthErrorMessage(error as AuthError);
+      toast({
+        variant: 'destructive',
+        title: 'Error de inicio de sesión',
+        description: message,
+      });
+      throw error;
+    }
   };
 
   const signOut = async () => {
