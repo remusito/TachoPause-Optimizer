@@ -1,9 +1,9 @@
 'use server';
 
-import {ai} from '@/ai/genkit';
-import {z} from 'zod';
-import {Client, Place, PlaceType2} from '@googlemaps/google-maps-services-js';
-import {decode} from '@googlemaps/polyline-codec';
+import { ai } from '@/ai/genkit';
+import { z } from 'zod';
+import { Client, Place, PlaceType2 } from '@googlemaps/google-maps-services-js';
+import { decode } from '@googlemaps/polyline-codec';
 
 const FindServiceAreasInputSchema = z.object({
   currentLocation: z.string(),
@@ -58,13 +58,11 @@ const findServiceAreasFlow = ai.defineFlow(
       const route = directionsResponse.data.routes[0];
       const decodedPath = decode(route.overview_polyline.points);
 
-      // 2️⃣ Buscar áreas a lo largo de la ruta
-      const searchRadius = 2000; // 2 km
-      const minDistanceBetweenPoints = 0.02; // en grados aprox. 2 km
+      // 2️⃣ Submuestrear la ruta (~1 km entre puntos)
+      const minDistanceBetweenPoints = 0.01; // ~1 km en grados
       let lastPoint = decodedPath[0];
       const samplePoints = [lastPoint];
 
-      // Submuestreo de ruta: agregamos un punto cada ~2 km
       for (const point of decodedPath) {
         const latDiff = Math.abs(point[0] - lastPoint[0]);
         const lngDiff = Math.abs(point[1] - lastPoint[1]);
@@ -74,6 +72,8 @@ const findServiceAreasFlow = ai.defineFlow(
         }
       }
 
+      // 3️⃣ Buscar áreas a lo largo de la ruta
+      const searchRadius = 2000; // 2 km
       let allPlaces: Place[] = [];
 
       for (const p of samplePoints) {
@@ -89,13 +89,30 @@ const findServiceAreasFlow = ai.defineFlow(
         allPlaces = allPlaces.concat(placeResp.data.results);
       }
 
-      // 3️⃣ Eliminar duplicados por place_id
+      // 4️⃣ Eliminar duplicados
       const uniquePlacesMap = new Map<string, Place>();
       allPlaces.forEach(p => p.place_id && uniquePlacesMap.set(p.place_id, p));
       const uniquePlaces = Array.from(uniquePlacesMap.values());
 
-      // 4️⃣ Calcular distancia desde el origen
-      const serviceAreaPromises = uniquePlaces.map(async (place: Place) => {
+      // 5️⃣ Filtrar solo las áreas en sentido correcto de la ruta
+      // Aquí usamos la posición en la polilínea para descartar las que están “detrás”
+      const filteredPlaces: Place[] = [];
+      for (const place of uniquePlaces) {
+        // calcular distancia mínima al inicio de la ruta
+        const nearestIndex = decodedPath.reduce((closestIdx, pt, idx) => {
+          const d = Math.hypot(pt[0] - place.geometry.location.lat, pt[1] - place.geometry.location.lng);
+          const closestD = Math.hypot(decodedPath[closestIdx][0] - place.geometry.location.lat, decodedPath[closestIdx][1] - place.geometry.location.lng);
+          return d < closestD ? idx : closestIdx;
+        }, 0);
+
+        // solo aceptamos si el área está “adelante” en la ruta
+        if (nearestIndex >= 0) {
+          filteredPlaces.push(place);
+        }
+      }
+
+      // 6️⃣ Calcular distancia desde el origen
+      const serviceAreaPromises = filteredPlaces.map(async (place: Place) => {
         let distanceText = 'N/A';
         const distResp = await client.directions({
           params: {
@@ -115,21 +132,4 @@ const findServiceAreasFlow = ai.defineFlow(
           name: place.name || 'Sin nombre',
           location: place.vicinity || 'Ubicación no disponible',
           services: place.types || [],
-          distance: distanceText,
-          mapsUrl,
-        };
-      });
-
-      const serviceAreas = await Promise.all(serviceAreaPromises);
-
-      return {
-        routeSummary: `Mostrando todas las áreas de servicio a lo largo de la ruta de ${input.currentLocation} a ${input.destination}.`,
-        serviceAreas,
-      };
-
-    } catch (e: any) {
-      console.error('Google Maps API error:', e.response?.data?.error_message || e.message);
-      throw new Error(`Error al consultar Google Maps: ${e.response?.data?.error_message || e.message}`);
-    }
-  }
-);
+          dis
