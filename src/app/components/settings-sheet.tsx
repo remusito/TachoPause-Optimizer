@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -27,6 +28,7 @@ import { useAchievements } from '@/hooks/use-achievements';
 import { PayPalButton } from '@/app/components/paypal-button';
 import { useAuth } from '@/firebase';
 import { useRouter } from 'next/navigation';
+import { doc, setDoc } from 'firebase/firestore';
 
 export function SettingsSheet() {
   const { theme, setTheme } = useTheme();
@@ -37,11 +39,53 @@ export function SettingsSheet() {
   const loading = auth?.loading;
   const router = useRouter();
   const { unlockAchievement } = useAchievements();
+  const [activationCode, setActivationCode] = useState('');
+  const [isActivating, setIsActivating] = useState(false);
   
-  // Assuming version is from package.json, which is not directly accessible on client.
-  // Hardcoding for now. A better approach would be to expose it via build process.
   const appVersion = '1.0.1-dev';
 
+  const handleActivatePremium = async () => {
+    if (!user) {
+      toast({
+        title: 'Error',
+        description: 'Debes iniciar sesión para activar premium.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (activationCode.trim().toUpperCase() !== 'DESMAYAO2025') {
+      toast({
+        title: 'Código incorrecto',
+        description: 'El código de activación no es válido.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsActivating(true);
+    try {
+      // Usar purchasePremium si está disponible
+      if (auth.purchasePremium) {
+        await auth.purchasePremium();
+      }
+      
+      toast({
+        title: '🎉 ¡Premium activado!',
+        description: 'Has desbloqueado todas las funciones premium.',
+      });
+      setActivationCode('');
+    } catch (error) {
+      console.error('Error activando premium:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo activar premium. Inténtalo de nuevo.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsActivating(false);
+    }
+  };
 
   const handleShare = async () => {
     const shareData = {
@@ -55,7 +99,6 @@ export function SettingsSheet() {
         await navigator.share(shareData);
         unlockAchievement('sharer');
       } catch (err: any) {
-        // Ignore abort errors which happen when the user cancels the share sheet
         if (err.name !== 'AbortError' && err.name !== 'NotAllowedError') {
           console.error('Error al compartir:', err);
            try {
@@ -76,7 +119,6 @@ export function SettingsSheet() {
         }
       }
     } else {
-      // Fallback for desktop or browsers that don't support navigator.share
       try {
         await navigator.clipboard.writeText(shareData.url);
         toast({
@@ -133,25 +175,59 @@ export function SettingsSheet() {
           </div>
           
           {!isPremium && (
-            <div className="space-y-4 rounded-lg border p-4">
-              <Label className='text-lg font-semibold flex items-center gap-2'><Icons.Premium className='text-primary'/> Desbloquear Premium</Label>
-              <p className="text-sm text-muted-foreground">
-                Consigue acceso a todas las funciones y apoya el desarrollo de la app con un único pago.
-              </p>
-              {user ? (
-                <PayPalButton />
-              ) : (
-                <Button className='w-full' onClick={() => {
-                  const trigger = document.querySelector('[data-radix-collection-item] > button');
-                  if (trigger instanceof HTMLElement) {
-                    trigger.click(); // close the sheet
-                  }
-                  router.push('/login')
-                }}>
-                  Iniciar Sesión para comprar
-                </Button>
+            <>
+              <div className="space-y-4 rounded-lg border p-4">
+                <Label className='text-lg font-semibold flex items-center gap-2'>
+                  <Icons.Premium className='text-primary'/> Desbloquear Premium
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Consigue acceso a todas las funciones y apoya el desarrollo de la app con un único pago.
+                </p>
+                {user ? (
+                  <PayPalButton />
+                ) : (
+                  <Button className='w-full' onClick={() => {
+                    const trigger = document.querySelector('[data-radix-collection-item] > button');
+                    if (trigger instanceof HTMLElement) {
+                      trigger.click();
+                    }
+                    router.push('/login')
+                  }}>
+                    Iniciar Sesión para comprar
+                  </Button>
+                )}
+              </div>
+
+              {/* Código de activación secreto */}
+              {user && (
+                <div className="space-y-4 rounded-lg border border-dashed p-4">
+                  <Label htmlFor="activation-code" className="text-sm font-medium">
+                    Código de activación
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="activation-code"
+                      type="text"
+                      placeholder="Ingresa el código"
+                      value={activationCode}
+                      onChange={(e) => setActivationCode(e.target.value.toUpperCase())}
+                      disabled={isActivating}
+                      className="flex-1"
+                    />
+                    <Button 
+                      onClick={handleActivatePremium} 
+                      disabled={isActivating || !activationCode.trim()}
+                      size="sm"
+                    >
+                      {isActivating ? 'Activando...' : 'Activar'}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    ¿Tienes un código de activación? Ingrésalo aquí.
+                  </p>
+                </div>
               )}
-            </div>
+            </>
           )}
 
            <div className="space-y-2">
