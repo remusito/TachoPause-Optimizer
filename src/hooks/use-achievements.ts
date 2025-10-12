@@ -1,67 +1,137 @@
-// src/hooks/use-achievements-provider.ts
-import { useState, useEffect } from 'react';
-import { allAchievements, type Achievement } from '@/lib/achievements';
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { allAchievements, type AchievementId } from '@/lib/achievements';
+
+const ACHIEVEMENTS_STORAGE_KEY = 'achievements-storage';
 
 type AchievementState = {
-  [id: string]: { unlocked: boolean; progress: number };
+  [K in AchievementId]?: {
+    unlocked: boolean;
+    progress: number;
+    unlockedAt?: number;
+  };
 };
+
+// Helper to get today's date as a string (e.g., "2025-10-12")
+const getTodayString = () => new Date().toISOString().split('T')[0];
 
 export function useAchievements() {
   const [achievements, setAchievements] = useState<AchievementState>({});
 
-  // Cargar logros desde localStorage
+  // Load achievements from localStorage on mount
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const stored = localStorage.getItem('tachoAchievements');
-    if (stored) {
-      setAchievements(JSON.parse(stored));
-    } else {
-      // inicializar con todos los logros bloqueados
-      const initialState: AchievementState = {};
-      allAchievements.forEach(a => {
-        initialState[a.id] = { unlocked: false, progress: 0 };
-      });
-      setAchievements(initialState);
+    try {
+      const storedData = localStorage.getItem(ACHIEVEMENTS_STORAGE_KEY);
+      if (storedData) {
+        setAchievements(JSON.parse(storedData));
+      }
+    } catch (error) {
+      console.error('Failed to load achievements from storage:', error);
     }
   }, []);
 
-  // Guardar cambios automáticamente en localStorage
+  // Persist achievements to localStorage whenever they change
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('tachoAchievements', JSON.stringify(achievements));
+    try {
+      localStorage.setItem(ACHIEVEMENTS_STORAGE_KEY, JSON.stringify(achievements));
+    } catch (error) {
+      console.error('Failed to save achievements to storage:', error);
     }
   }, [achievements]);
 
-  // Desbloquear un logro
-  const unlockAchievement = (id: string) => {
-    setAchievements(prev => {
-      const current = prev[id] || { unlocked: false, progress: 0 };
-      if (current.unlocked) return prev; // ya desbloqueado
-      const updated = { ...prev, [id]: { ...current, unlocked: true, progress: 100 } };
-      // opcional: mostrar toast aquí si quieres
-      // toast({ title: `¡Logro desbloqueado!`, description: allAchievements.find(a => a.id === id)?.title });
-      return updated;
-    });
-  };
+  const unlockAchievement = useCallback((id: AchievementId) => {
+    const achievementDef = allAchievements.find(a => a.id === id);
+    if (!achievementDef) return;
 
-  // Actualizar progreso de un logro (0-100)
-  const updateProgress = (id: string, progress: number) => {
-    setAchievements(prev => {
-      const current = prev[id] || { unlocked: false, progress: 0 };
-      const newProgress = Math.min(100, Math.max(0, progress));
-      return { ...prev, [id]: { ...current, progress: newProgress, unlocked: newProgress >= 100 ? true : current.unlocked } };
-    });
-  };
+    if (achievements[id]?.unlocked) return;
 
-  // Resetear logros (opcional)
-  const resetAchievements = () => {
-    const resetState: AchievementState = {};
-    allAchievements.forEach(a => {
-      resetState[a.id] = { unlocked: false, progress: 0 };
-    });
-    setAchievements(resetState);
-    localStorage.removeItem('tachoAchievements');
-  };
+    setAchievements(prev => ({
+      ...prev,
+      [id]: { ...prev[id], unlocked: true, progress: achievementDef.goal, unlockedAt: Date.now() },
+    }));
+  }, [achievements]);
 
-  return { achievements, unlockAchievement, updateProgress, resetAchievements };
+  const updateAchievementProgress = useCallback((id: AchievementId, value: number) => {
+    const achievementDef = allAchievements.find(a => a.id === id);
+    if (!achievementDef || achievements[id]?.unlocked) return;
+
+    const currentProgress = achievements[id]?.progress || 0;
+    const newProgress = Math.max(currentProgress, value);
+
+    setAchievements(prev => ({
+      ...prev,
+      [id]: { ...prev[id], progress: Math.min(newProgress, achievementDef.goal) },
+    }));
+
+    if (newProgress >= achievementDef.goal) unlockAchievement(id);
+  }, [achievements, unlockAchievement]);
+
+  const incrementAchievementProgress = useCallback((id: AchievementId, amount: number = 1) => {
+    const achievementDef = allAchievements.find(a => a.id === id);
+    if (!achievementDef || achievements[id]?.unlocked) return;
+
+    const currentProgress = achievements[id]?.progress || 0;
+    const newProgress = currentProgress + amount;
+
+    setAchievements(prev => ({
+      ...prev,
+      [id]: { ...prev[id], progress: Math.min(newProgress, achievementDef.goal) },
+    }));
+
+    if (newProgress >= achievementDef.goal) unlockAchievement(id);
+  }, [achievements, unlockAchievement]);
+
+  const trackAppUsage = useCallback(() => {
+    unlockAchievement('first_use');
+
+    const today = getTodayString();
+    const lastVisit = localStorage.getItem('last-visit-date');
+    const consecutiveDays = parseInt(localStorage.getItem('consecutive-days') || '0', 10);
+
+    if (lastVisit !== today) {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayString = yesterday.toISOString().split('T')[0];
+
+      if (lastVisit === yesterdayString) {
+        const newConsecutiveDays = consecutiveDays + 1;
+        localStorage.setItem('consecutive-days', String(newConsecutiveDays));
+        updateAchievementProgress('consistency_5_days', newConsecutiveDays);
+      } else {
+        localStorage.setItem('consecutive-days', '1');
+        updateAchievementProgress('consistency_5_days', 1);
+      }
+      localStorage.setItem('last-visit-date', today);
+    }
+  }, [unlockAchievement, updateAchievementProgress]);
+
+  const trackCycleStart = useCallback(() => {
+    const hour = new Date().getHours();
+    if (hour < 6) unlockAchievement('early_bird');
+    if (hour >= 22) unlockAchievement('night_owl');
+
+    const today = getTodayString();
+    const cycleCountKey = `cycle-count-${today}`;
+    const todayCycles = parseInt(localStorage.getItem(cycleCountKey) || '0', 10) + 1;
+    localStorage.setItem(cycleCountKey, String(todayCycles));
+    incrementAchievementProgress('time_master', 1);
+  }, [unlockAchievement, incrementAchievementProgress]);
+
+  const resetAchievements = useCallback(() => {
+    setAchievements({});
+    localStorage.removeItem(ACHIEVEMENTS_STORAGE_KEY);
+    localStorage.removeItem('last-visit-date');
+    localStorage.removeItem('consecutive-days');
+  }, []);
+
+  return {
+    achievements,
+    unlockAchievement,
+    updateAchievementProgress,
+    incrementAchievementProgress,
+    trackAppUsage,
+    trackCycleStart,
+    resetAchievements,
+  };
 }
