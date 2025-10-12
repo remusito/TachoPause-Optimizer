@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -66,7 +65,7 @@ export default function RouteCalculatorPage() {
 
 
   const handleCalculate = async () => {
-    const routeDetails: RouteDetail[] = segments.map(s => ({origin: s.origin, destination: s.destination}));
+    const routeDetails: RouteDetail[] = segments.map(s => ({origin: s.origin.trim(), destination: s.destination.trim()}));
 
     if (routeDetails.some(route => !route.origin || !route.destination)) {
        toast({
@@ -82,14 +81,21 @@ export default function RouteCalculatorPage() {
     setResult(null);
 
     try {
+      console.log('🔵 Calculando ruta con:', routeDetails);
       const response = await calculateMultipleRouteDetails({ routeDetails });
+      console.log('✅ Resultado:', response);
       setResult(response);
+      toast({
+        title: 'Ruta calculada',
+        description: 'La ruta se ha calculado correctamente.',
+      });
     } catch (e) {
-        const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred.';
-        setError(`Error al calcular la ruta: ${errorMessage}`);
+        console.error('❌ Error calculando ruta:', e);
+        const errorMessage = e instanceof Error ? e.message : 'Ha ocurrido un error desconocido.';
+        setError(errorMessage);
         toast({
             title: 'Error de Cálculo',
-            description: `No se pudo obtener la información de la ruta. ${errorMessage}`,
+            description: errorMessage,
             variant: 'destructive',
         });
     } finally {
@@ -156,15 +162,33 @@ export default function RouteCalculatorPage() {
                           <div className="grid sm:grid-cols-2 gap-4">
                               <div className="space-y-2">
                                   <Label htmlFor={`origin-${segment.id}`}>Origen</Label>
-                                  <Input id={`origin-${segment.id}`} placeholder="Ej: Barcelona, España" value={segment.origin} onChange={(e) => handleSegmentChange(segment.id, 'origin', e.target.value)} />
+                                  <Input 
+                                    id={`origin-${segment.id}`} 
+                                    placeholder="Ej: Barcelona, España" 
+                                    value={segment.origin} 
+                                    onChange={(e) => handleSegmentChange(segment.id, 'origin', e.target.value)}
+                                    disabled={isLoading}
+                                  />
                               </div>
                               <div className="space-y-2">
                                   <Label htmlFor={`destination-${segment.id}`}>Destino</Label>
-                                  <Input id={`destination-${segment.id}`} placeholder="Ej: Lyon, Francia" value={segment.destination} onChange={(e) => handleSegmentChange(segment.id, 'destination', e.target.value)} />
+                                  <Input 
+                                    id={`destination-${segment.id}`} 
+                                    placeholder="Ej: Lyon, Francia" 
+                                    value={segment.destination} 
+                                    onChange={(e) => handleSegmentChange(segment.id, 'destination', e.target.value)}
+                                    disabled={isLoading}
+                                  />
                               </div>
                           </div>
                           {segments.length > 1 && (
-                            <Button variant="ghost" size="icon" className='absolute top-2 right-2 h-7 w-7' onClick={() => removeSegment(segment.id)}>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className='absolute top-2 right-2 h-7 w-7' 
+                              onClick={() => removeSegment(segment.id)}
+                              disabled={isLoading}
+                            >
                                <Trash2 className="h-4 w-4 text-destructive" />
                                <span className="sr-only">Eliminar tramo</span>
                             </Button>
@@ -172,13 +196,17 @@ export default function RouteCalculatorPage() {
                         </div>
                       ))}
                       <div className='flex justify-start'>
-                         <Button variant="outline" onClick={addSegment} disabled={segments.length >= 6}>
+                         <Button 
+                           variant="outline" 
+                           onClick={addSegment} 
+                           disabled={segments.length >= 6 || isLoading}
+                         >
                            <Icons.Play className="mr-2 rotate-90" /> Añadir Tramo
                          </Button>
                       </div>
                     </CardContent>
                     <CardFooter>
-                        <Button onClick={handleCalculate} disabled={isLoading}>
+                        <Button onClick={handleCalculate} disabled={isLoading} className="w-full">
                             {isLoading ? <Icons.Spinner className="mr-2 animate-spin" /> : <Icons.Calculator className="mr-2" />}
                             {isLoading ? 'Calculando...' : 'Calcular Ruta Completa'}
                         </Button>
