@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -71,37 +70,46 @@ const findServiceAreasFlow = ai.defineFlow(
 
       const route = directionsResponse.data.routes[0];
       const overview_polyline = route.overview_polyline.points;
-
-      // For simplicity, we'll search near the midpoint of the route.
-      // A more complex implementation could search at multiple points.
       const decodedPath = decode(overview_polyline);
-      const midpointTuple = decodedPath[Math.floor(decodedPath.length / 2)];
-      const midpoint = {lat: midpointTuple[0], lng: midpointTuple[1]};
 
-      // 2. Search for service areas (rest_area) and gas stations near the midpoint
-      const placesResponse = await client.placesNearby({
-        params: {
-          location: midpoint,
-          radius: 50000, // Search within a 50km radius of the midpoint
-          type: 'rest_area' as PlaceType2,
-          keyword: 'truck stop, area de servicio',
-          key: apiKey,
-        },
-      });
+      // 2. Search for service areas along the route
+      const searchRadius = 2000; // 2 km
+      const step = Math.floor(decodedPath.length / 10); // divide la ruta en 10 puntos
+      let allPlaces: Place[] = [];
 
-      const serviceAreaPromises = placesResponse.data.results.map(async (place: Place) => {
+      for (let i = 0; i < decodedPath.length; i += step) {
+        const point = { lat: decodedPath[i][0], lng: decodedPath[i][1] };
+        const placesResponse = await client.placesNearby({
+          params: {
+            location: point,
+            radius: searchRadius,
+            type: 'rest_area' as PlaceType2,
+            keyword: 'truck stop, area de servicio',
+            key: apiKey,
+          },
+        });
+
+        allPlaces = allPlaces.concat(placesResponse.data.results);
+      }
+
+      // Eliminar duplicados por place_id
+      const uniquePlacesMap = new Map<string, Place>();
+      allPlaces.forEach(p => uniquePlacesMap.set(p.place_id!, p));
+      const uniquePlaces = Array.from(uniquePlacesMap.values());
+
+      // 3. Calcular distancia desde el origen
+      const serviceAreaPromises = uniquePlaces.map(async (place: Place) => {
         let distanceText = 'N/A';
-        // 3. For each place, get distance from origin
         const distanceResponse = await client.directions({
-            params: {
-                origin: input.currentLocation,
-                destination: `place_id:${place.place_id}`,
-                key: apiKey,
-            }
+          params: {
+            origin: input.currentLocation,
+            destination: `place_id:${place.place_id}`,
+            key: apiKey,
+          },
         });
 
         if (distanceResponse.data.routes.length > 0 && distanceResponse.data.routes[0].legs.length > 0) {
-            distanceText = distanceResponse.data.routes[0].legs[0].distance?.text ?? 'N/A';
+          distanceText = distanceResponse.data.routes[0].legs[0].distance?.text ?? 'N/A';
         }
 
         const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name || '')}&query_place_id=${place.place_id}`;
@@ -117,10 +125,9 @@ const findServiceAreasFlow = ai.defineFlow(
 
       const serviceAreas = await Promise.all(serviceAreaPromises);
 
-
       return {
-        routeSummary: `Mostrando áreas de servicio en la ruta de ${input.currentLocation} a ${input.destination}.`,
-        serviceAreas: serviceAreas.slice(0, 10), // Limit to 10 results
+        routeSummary: `Mostrando áreas de servicio a lo largo de la ruta de ${input.currentLocation} a ${input.destination}.`,
+        serviceAreas: serviceAreas.slice(0, 10), // Limitar a 10 resultados
       };
     } catch (e: any) {
       console.error('Error calling Google Maps API:', e.response?.data?.error_message || e.message);
