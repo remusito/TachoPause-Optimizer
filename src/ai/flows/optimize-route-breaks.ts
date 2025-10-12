@@ -144,10 +144,11 @@ const findServiceAreasFlow = ai.defineFlow(
 
       const serviceAreas = await Promise.all(serviceAreaPromises);
 
-      return {
-        routeSummary: `Mostrando todas las áreas de servicio en el sentido de la ruta de ${input.currentLocation} a ${input.destination}.`,
-        serviceAreas,
-      };
+return {
+  routeSummary: `Mostrando hasta 20 áreas de servicio en el sentido de la ruta de ${input.currentLocation} a ${input.destination}.`,
+  serviceAreas: serviceAreas.slice(0, 20),
+};
+
 
     } catch (e: any) {
       console.error('Google Maps API error:', e.response?.data?.error_message || e.message);
