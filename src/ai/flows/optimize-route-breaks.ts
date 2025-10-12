@@ -132,4 +132,21 @@ const findServiceAreasFlow = ai.defineFlow(
           name: place.name || 'Sin nombre',
           location: place.vicinity || 'Ubicación no disponible',
           services: place.types || [],
-          dis
+          distance: distanceText,
+          mapsUrl,
+        };
+      });
+
+      const serviceAreas = await Promise.all(serviceAreaPromises);
+
+      return {
+        routeSummary: `Mostrando todas las áreas de servicio en el sentido de la ruta de ${input.currentLocation} a ${input.destination}.`,
+        serviceAreas,
+      };
+
+    } catch (e: any) {
+      console.error('Google Maps API error:', e.response?.data?.error_message || e.message);
+      throw new Error(`Error al consultar Google Maps: ${e.response?.data?.error_message || e.message}`);
+    }
+  }
+);
