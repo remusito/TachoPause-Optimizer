@@ -95,13 +95,16 @@ const findServiceAreasFlow = ai.defineFlow(
       const uniquePlaces = Array.from(uniquePlacesMap.values());
 
       // 5️⃣ Filtrar solo las áreas en sentido correcto de la ruta
-      // Aquí usamos la posición en la polilínea para descartar las que están “detrás”
       const filteredPlaces: Place[] = [];
       for (const place of uniquePlaces) {
-        // calcular distancia mínima al inicio de la ruta
+        if (!place.geometry || !place.geometry.location) continue;
+
         const nearestIndex = decodedPath.reduce((closestIdx, pt, idx) => {
-          const d = Math.hypot(pt[0] - place.geometry.location.lat, pt[1] - place.geometry.location.lng);
-          const closestD = Math.hypot(decodedPath[closestIdx][0] - place.geometry.location.lat, decodedPath[closestIdx][1] - place.geometry.location.lng);
+          const d = Math.hypot(pt[0] - place.geometry!.location.lat, pt[1] - place.geometry!.location.lng);
+          const closestD = Math.hypot(
+            decodedPath[closestIdx][0] - place.geometry!.location.lat,
+            decodedPath[closestIdx][1] - place.geometry!.location.lng
+          );
           return d < closestD ? idx : closestIdx;
         }, 0);
 
@@ -114,16 +117,18 @@ const findServiceAreasFlow = ai.defineFlow(
       // 6️⃣ Calcular distancia desde el origen
       const serviceAreaPromises = filteredPlaces.map(async (place: Place) => {
         let distanceText = 'N/A';
-        const distResp = await client.directions({
-          params: {
-            origin: input.currentLocation,
-            destination: `place_id:${place.place_id}`,
-            key: apiKey,
-          },
-        });
+        if (place.geometry && place.geometry.location) {
+          const distResp = await client.directions({
+            params: {
+              origin: input.currentLocation,
+              destination: `place_id:${place.place_id}`,
+              key: apiKey,
+            },
+          });
 
-        if (distResp.data.routes.length && distResp.data.routes[0].legs.length) {
-          distanceText = distResp.data.routes[0].legs[0].distance?.text ?? 'N/A';
+          if (distResp.data.routes.length && distResp.data.routes[0].legs.length) {
+            distanceText = distResp.data.routes[0].legs[0].distance?.text ?? 'N/A';
+          }
         }
 
         const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name || '')}&query_place_id=${place.place_id}`;
