@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -29,7 +28,6 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 
 const menuItems = [
   { href: '/', icon: Icons.Play, label: 'Temporizador' },
@@ -74,7 +72,18 @@ export function MainSidebar() {
                     {user.displayName && <p className="text-xs leading-none text-muted-foreground truncate">{user.email}</p>}
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={signOut}>
+                <DropdownMenuItem 
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    try {
+                      await signOut();
+                      router.push('/login');
+                    } catch (error) {
+                      console.error('Error al cerrar sesión:', error);
+                    }
+                  }}
+                  className="cursor-pointer"
+                >
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Cerrar Sesión</span>
                 </DropdownMenuItem>
