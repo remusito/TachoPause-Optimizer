@@ -20,7 +20,6 @@ import { SettingsSheet } from '../components/settings-sheet';
 import { PremiumPlaceholder } from '../components/premium-placeholder';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { calculateMultipleRouteDetails } from '@/ai/flows/calculate-route-details';
 import type { CalculateMultipleRouteDetailsOutput, RouteDetail } from '@/ai/flows/calculate-route-details';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -64,44 +63,61 @@ export default function RouteCalculatorPage() {
   };
 
 
-  const handleCalculate = async () => {
-    const routeDetails: RouteDetail[] = segments.map(s => ({origin: s.origin.trim(), destination: s.destination.trim()}));
+const handleCalculate = async () => {
+  const routeDetails: RouteDetail[] = segments.map(s => ({
+    origin: s.origin.trim(), 
+    destination: s.destination.trim()
+  }));
 
-    if (routeDetails.some(route => !route.origin || !route.destination)) {
-       toast({
-        title: 'Faltan datos',
-        description: 'Por favor, completa todos los campos de origen y destino.',
-        variant: 'destructive',
-      });
-      return;
+  if (routeDetails.some(route => !route.origin || !route.destination)) {
+     toast({
+      title: 'Faltan datos',
+      description: 'Por favor, completa todos los campos de origen y destino.',
+      variant: 'destructive',
+    });
+    return;
+  }
+
+  setIsLoading(true);
+  setError(null);
+  setResult(null);
+
+  try {
+    console.log('🔵 Calculando ruta con:', routeDetails);
+    
+    const response = await fetch('/api/calculate-route', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ routeDetails }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Error al calcular la ruta');
     }
 
-    setIsLoading(true);
-    setError(null);
-    setResult(null);
-
-    try {
-      console.log('🔵 Calculando ruta con:', routeDetails);
-      const response = await calculateMultipleRouteDetails({ routeDetails });
-      console.log('✅ Resultado:', response);
-      setResult(response);
+    const data = await response.json();
+    console.log('✅ Resultado:', data);
+    setResult(data);
+    toast({
+      title: 'Ruta calculada',
+      description: 'La ruta se ha calculado correctamente.',
+    });
+  } catch (e) {
+      console.error('❌ Error calculando ruta:', e);
+      const errorMessage = e instanceof Error ? e.message : 'Ha ocurrido un error desconocido.';
+      setError(errorMessage);
       toast({
-        title: 'Ruta calculada',
-        description: 'La ruta se ha calculado correctamente.',
+          title: 'Error de Cálculo',
+          description: errorMessage,
+          variant: 'destructive',
       });
-    } catch (e) {
-        console.error('❌ Error calculando ruta:', e);
-        const errorMessage = e instanceof Error ? e.message : 'Ha ocurrido un error desconocido.';
-        setError(errorMessage);
-        toast({
-            title: 'Error de Cálculo',
-            description: errorMessage,
-            variant: 'destructive',
-        });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  } finally {
+    setIsLoading(false);
+  }
+};
 
 
   return (
