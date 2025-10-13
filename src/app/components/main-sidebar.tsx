@@ -34,6 +34,7 @@ const menuItems = [
   { href: '/speedometer', icon: Icons.Speedometer, label: 'Velocímetro GPS' },
   { href: '/route-calculator', icon: Icons.Calculator, label: 'Calculadora de Ruta', premium: true },
   { href: '/route-optimizer', icon: Icons.Route, label: 'Buscador de Paradas', premium: true },
+  { href: '/loads', icon: Icons.Package, label: 'Mercancías', premium: false }, // 👈 NUEVO
   { href: '/telephones', icon: Icons.Phone, label: 'Teléfonos', premium: true },
   { href: '/history', icon: Icons.History, label: 'Historial', premium: false },
   { href: '/stats', icon: Icons.BarChart, label: 'Estadísticas', premium: false },
