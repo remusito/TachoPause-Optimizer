@@ -1,4 +1,6 @@
-import type { LucideProps } from 'lucide-react';
+// src/components/icons.tsx
+
+import type { LucideProps } from "lucide-react";
 import {
   AlertTriangle,
   Award,
@@ -31,7 +33,8 @@ import {
   Calculator,
   HeartHandshake,
   Share2,
-} from 'lucide-react';
+  Package, // 👈 NUEVO IMPORT
+} from "lucide-react";
 
 export const Icons = {
   Truck: (props: LucideProps) => <Truck {...props} />,
@@ -66,4 +69,5 @@ export const Icons = {
   Calculator: (props: LucideProps) => <Calculator {...props} />,
   HeartHandshake: (props: LucideProps) => <HeartHandshake {...props} />,
   Share: (props: LucideProps) => <Share2 {...props} />,
+  Package: (props: LucideProps) => <Package {...props} />, // 👈 NUEVO ICONO AÑADIDO
 };
