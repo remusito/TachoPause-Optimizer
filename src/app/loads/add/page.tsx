@@ -117,4 +117,165 @@ export default function AddLoadPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button asChild classN
+                  <Button asChild className="w-full">
+                    <Link href="/login">Iniciar Sesión</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            </main>
+          </div>
+        </SidebarInset>
+      </SidebarProvider>
+    );
+  }
+
+  return (
+    <SidebarProvider>
+      <MainSidebar />
+      <SidebarInset>
+        <div className="flex flex-col min-h-dvh bg-background text-foreground">
+          <header className="w-full p-4 sm:p-6 flex items-center justify-between border-b">
+            <div className="flex items-center gap-2">
+              <SidebarTrigger className="md:hidden">
+                <Icons.Menu />
+              </SidebarTrigger>
+              <Button variant="ghost" size="icon" asChild>
+                <Link href="/loads">
+                  <ArrowLeft className="h-5 w-5" />
+                </Link>
+              </Button>
+              <Package className="h-6 w-6 text-primary" />
+              <h1 className="text-lg sm:text-xl font-bold">Agregar Carga</h1>
+            </div>
+            <SettingsSheet />
+          </header>
+
+          <main className="flex-1 w-full p-4 sm:p-6">
+            <div className="max-w-2xl mx-auto">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Nueva Información de Carga</CardTitle>
+                  <CardDescription>
+                    Comparte información útil sobre puntos de carga con otros conductores.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">
+                        Nombre del lugar <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="name"
+                        name="name"
+                        placeholder="Ej: Cantera El Roble"
+                        value={formData.name}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="material">
+                        Material a cargar <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="material"
+                        name="material"
+                        placeholder="Ej: Arena, Grava, Cemento, etc."
+                        value={formData.material}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="location">Ubicación</Label>
+                      <Input
+                        id="location"
+                        name="location"
+                        placeholder="Ej: Carretera N-340, km 245, Almería"
+                        value={formData.location}
+                        onChange={handleChange}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="radioChannel">Canal de radio emisora</Label>
+                      <Input
+                        id="radioChannel"
+                        name="radioChannel"
+                        placeholder="Ej: Canal 19"
+                        value={formData.radioChannel}
+                        onChange={handleChange}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Teléfono del encargado</Label>
+                      <Input
+                        id="phone"
+                        name="phone"
+                        type="tel"
+                        placeholder="Ej: +34 600 123 456"
+                        value={formData.phone}
+                        onChange={handleChange}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="schedule">Horario de atención</Label>
+                      <Input
+                        id="schedule"
+                        name="schedule"
+                        placeholder="Ej: Lunes a Viernes 8:00 - 18:00"
+                        value={formData.schedule}
+                        onChange={handleChange}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="notes">Notas adicionales</Label>
+                      <Textarea
+                        id="notes"
+                        name="notes"
+                        placeholder="Ej: Llevar DNI, Acceso por la entrada trasera, etc."
+                        value={formData.notes}
+                        onChange={handleChange}
+                        rows={4}
+                      />
+                    </div>
+
+                    <div className="flex gap-4">
+                      <Button type="submit" disabled={isSubmitting} className="flex-1">
+                        {isSubmitting ? (
+                          <>
+                            <Icons.Spinner className="mr-2 h-4 w-4 animate-spin" />
+                            Guardando...
+                          </>
+                        ) : (
+                          <>
+                            <Package className="mr-2 h-4 w-4" />
+                            Guardar Información
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => router.push('/loads')}
+                        disabled={isSubmitting}
+                      >
+                        Cancelar
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            </div>
+          </main>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}
