@@ -28,7 +28,7 @@ import { useAchievements } from '@/hooks/use-achievements';
 import { PayPalButton } from '@/app/components/paypal-button';
 import { useAuth } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { doc, setDoc } from 'firebase/firestore';
+import { Mail } from 'lucide-react';
 
 export function SettingsSheet() {
   const { theme, setTheme } = useTheme();
@@ -65,7 +65,6 @@ export function SettingsSheet() {
 
     setIsActivating(true);
     try {
-      // Usar purchasePremium si está disponible
       if (auth.purchasePremium) {
         await auth.purchasePremium();
       }
@@ -85,6 +84,27 @@ export function SettingsSheet() {
     } finally {
       setIsActivating(false);
     }
+  };
+
+  const handleContact = () => {
+    const email = 'tachopauseoptimizer@gmail.com';
+    const subject = 'Contacto desde TachoPause Optimizer';
+    const body = `Hola,
+
+Me gustaría ponerme en contacto contigo sobre TachoPause Optimizer.
+
+---
+Usuario: ${user?.email || 'No autenticado'}
+Versión: ${appVersion}`;
+
+    const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    
+    window.location.href = mailtoLink;
+    
+    toast({
+      title: 'Abriendo cliente de correo',
+      description: 'Se abrirá tu aplicación de correo predeterminada.',
+    });
   };
 
   const handleShare = async () => {
@@ -235,6 +255,17 @@ export function SettingsSheet() {
              <Button onClick={handleShare} className="w-full" variant="outline">
                 <Icons.Share className="mr-2" /> Compartir App
             </Button>
+          </div>
+
+          {/* Nueva sección de contacto */}
+          <div className="space-y-2">
+            <Label>Soporte y Contacto</Label>
+            <Button onClick={handleContact} className="w-full" variant="outline">
+              <Mail className="mr-2 h-4 w-4" /> Contactar por Email
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              ¿Tienes dudas, sugerencias o problemas? Escríbenos a tachopauseoptimizer@gmail.com
+            </p>
           </div>
         </div>
         <SheetFooter>
