@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 import { Providers } from './providers';
+import Script from 'next/script';
 
 export const metadata: Metadata = {
   title: 'TachoPause Optimizer',
@@ -49,6 +50,14 @@ export default function RootLayout({
           process.env.NODE_ENV === 'development' ? 'debug-screens' : ''
         )}
       >
+        {/* Google AdSense Script */}
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2279178254221933"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
+        
         <Providers>
           {children}
           <Toaster />
