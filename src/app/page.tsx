@@ -11,6 +11,7 @@ import {
 import { usePremium } from '@/hooks/use-premium';
 import { MainSidebar } from './components/main-sidebar';
 import { FooterWithAd } from './components/footer-with-ad';
+import { WelcomeOverlay } from './components/welcome-overlay'; // 👈 NUEVO
 import { useEffect } from 'react';
 import { useAchievements } from '@/hooks/use-achievements-provider';
 
@@ -21,7 +22,6 @@ export default function Home() {
   useEffect(() => {
     trackAppUsage();
   }, [trackAppUsage]);
-
 
   return (
     <SidebarProvider>
@@ -56,6 +56,9 @@ export default function Home() {
           <FooterWithAd />
         </div>
       </SidebarInset>
+      
+      {/* 👇 OVERLAY DE BIENVENIDA */}
+      <WelcomeOverlay />
     </SidebarProvider>
   );
 }
