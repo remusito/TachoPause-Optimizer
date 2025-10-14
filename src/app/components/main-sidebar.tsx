@@ -9,6 +9,9 @@ import {
   SidebarMenuItem,
   SidebarFooter,
   SidebarSeparator,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
 } from '@/components/ui/sidebar';
 import { Icons } from '@/components/icons';
 import { useAuth } from '@/firebase';
@@ -28,18 +31,72 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { ChevronDown } from 'lucide-react';
 
-const menuItems = [
-  { href: '/', icon: Icons.Play, label: 'Temporizador' },
-  { href: '/speedometer', icon: Icons.Speedometer, label: 'Velocímetro GPS' },
-  { href: '/route-calculator', icon: Icons.Calculator, label: 'Calculadora de Ruta', premium: true },
-  { href: '/route-optimizer', icon: Icons.Route, label: 'Buscador de Paradas', premium: true },
-  { href: '/loads', icon: Icons.Package, label: 'Mercancías', premium: false },
-  { href: '/telephones', icon: Icons.Phone, label: 'Teléfonos', premium: true },
-  { href: '/history', icon: Icons.History, label: 'Historial', premium: false },
-  { href: '/stats', icon: Icons.BarChart, label: 'Estadísticas', premium: false },
-  { href: '/tutorial', icon: Icons.BookOpen, label: 'Tutorial' },
-  { href: '/rewards', icon: Icons.Award, label: 'Recompensas' },
+// Estructura del menú con grupos y submenús
+const menuStructure = [
+  { 
+    href: '/', 
+    icon: Icons.Play, 
+    label: 'Temporizador',
+    premium: false 
+  },
+  {
+    label: 'Vehículo',
+    icon: Icons.Truck,
+    items: [
+      { href: '/speedometer', icon: Icons.Speedometer, label: 'Velocímetro GPS', premium: false },
+      { href: '/maintenance', icon: Icons.Wrench, label: 'Mantenimiento', premium: true },
+    ]
+  },
+  {
+    label: 'Rutas',
+    icon: Icons.Route,
+    items: [
+      { href: '/route-calculator', icon: Icons.Calculator, label: 'Calculadora', premium: true },
+      { href: '/route-optimizer', icon: Icons.MapPin, label: 'Buscador de Paradas', premium: true },
+    ]
+  },
+  { 
+    href: '/loads', 
+    icon: Icons.Package, 
+    label: 'Mercancías',
+    premium: false 
+  },
+  { 
+    href: '/telephones', 
+    icon: Icons.Phone, 
+    label: 'Teléfonos',
+    premium: true 
+  },
+  {
+    label: 'Mis Datos',
+    icon: Icons.BarChart,
+    items: [
+      { href: '/history', icon: Icons.History, label: 'Historial', premium: false },
+      { href: '/stats', icon: Icons.BarChart, label: 'Estadísticas', premium: false },
+    ]
+  },
+  {
+    label: 'Información',
+    icon: Icons.BookOpen,
+    items: [
+      { href: '/tutorial', icon: Icons.BookOpen, label: 'Tutorial', premium: false },
+      { href: '/regulations', icon: Icons.FileText, label: 'Reglamento', premium: false },
+    ]
+  },
+  { 
+    href: '/rewards', 
+    icon: Icons.Award, 
+    label: 'Recompensas',
+    premium: false 
+  },
 ];
 
 export function MainSidebar() {
@@ -47,6 +104,15 @@ export function MainSidebar() {
   const { user, loading, signOut } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+  const [openGroups, setOpenGroups] = useState<string[]>([]);
+
+  const toggleGroup = (label: string) => {
+    setOpenGroups(prev => 
+      prev.includes(label) 
+        ? prev.filter(g => g !== label)
+        : [...prev, label]
+    );
+  };
 
   const AuthButton = () => {
     if (loading) {
@@ -112,20 +178,65 @@ export function MainSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
-          {menuItems.map((item) => (
-            <SidebarMenuItem key={item.href}>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname === item.href}
-              >
-                <Link href={item.href}>
-                  <item.icon />
-                  <span>{item.label}</span>
-                  {(item.premium && !isPremium) && <Icons.Premium className="ml-auto" />}
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+          {menuStructure.map((item) => {
+            // Si tiene items, es un grupo collapsible
+            if ('items' in item) {
+              const isOpen = openGroups.includes(item.label);
+              const hasActiveChild = item.items.some(child => pathname === child.href);
+              
+              return (
+                <Collapsible
+                  key={item.label}
+                  open={isOpen || hasActiveChild}
+                  onOpenChange={() => toggleGroup(item.label)}
+                >
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton>
+                        <item.icon />
+                        <span>{item.label}</span>
+                        <ChevronDown className={`ml-auto transition-transform ${isOpen || hasActiveChild ? 'rotate-180' : ''}`} />
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {item.items.map((subItem) => (
+                          <SidebarMenuSubItem key={subItem.href}>
+                            <SidebarMenuSubButton
+                              asChild
+                              isActive={pathname === subItem.href}
+                            >
+                              <Link href={subItem.href}>
+                                <subItem.icon />
+                                <span>{subItem.label}</span>
+                                {(subItem.premium && !isPremium) && <Icons.Premium className="ml-auto" />}
+                              </Link>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </SidebarMenuItem>
+                </Collapsible>
+              );
+            }
+            
+            // Si no tiene items, es un link simple
+            return (
+              <SidebarMenuItem key={item.href}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === item.href}
+                >
+                  <Link href={item.href}>
+                    <item.icon />
+                    <span>{item.label}</span>
+                    {(item.premium && !isPremium) && <Icons.Premium className="ml-auto" />}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
