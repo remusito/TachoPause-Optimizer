@@ -33,7 +33,10 @@ import {
   Calculator,
   HeartHandshake,
   Share2,
-  Package, // 👈 NUEVO IMPORT
+  Package,
+  FileText,
+  Wrench,
+  MapPin,
 } from "lucide-react";
 
 export const Icons = {
@@ -69,5 +72,8 @@ export const Icons = {
   Calculator: (props: LucideProps) => <Calculator {...props} />,
   HeartHandshake: (props: LucideProps) => <HeartHandshake {...props} />,
   Share: (props: LucideProps) => <Share2 {...props} />,
-  Package: (props: LucideProps) => <Package {...props} />, // 👈 NUEVO ICONO AÑADIDO
+  Package: (props: LucideProps) => <Package {...props} />,
+  FileText: (props: LucideProps) => <FileText {...props} />,
+  Wrench: (props: LucideProps) => <Wrench {...props} />,
+  MapPin: (props: LucideProps) => <MapPin {...props} />,
 };
