@@ -176,69 +176,73 @@ export function MainSidebar() {
           </h1>
         </div>
       </SidebarHeader>
-      <SidebarContent>
-        <SidebarMenu>
-          {menuStructure.map((item) => {
-            // Si tiene items, es un grupo collapsible
-            if ('items' in item) {
-              const isOpen = openGroups.includes(item.label);
-              const hasActiveChild = item.items.some(child => pathname === child.href);
-              
-              return (
-                <Collapsible
-                  key={item.label}
-                  open={isOpen || hasActiveChild}
-                  onOpenChange={() => toggleGroup(item.label)}
-                >
-                  <SidebarMenuItem>
-                    <CollapsibleTrigger asChild>
-                      <SidebarMenuButton>
-                        <item.icon />
-                        <span>{item.label}</span>
-                        <ChevronDown className={`ml-auto transition-transform ${isOpen || hasActiveChild ? 'rotate-180' : ''}`} />
-                      </SidebarMenuButton>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <SidebarMenuSub>
-                        {item.items.map((subItem) => (
-                          <SidebarMenuSubItem key={subItem.href}>
-                            <SidebarMenuSubButton
-                              asChild
-                              isActive={pathname === subItem.href}
-                            >
-                              <Link href={subItem.href}>
-                                <subItem.icon />
-                                <span>{subItem.label}</span>
-                                {(subItem.premium && !isPremium) && <Icons.Premium className="ml-auto" />}
-                              </Link>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        ))}
-                      </SidebarMenuSub>
-                    </CollapsibleContent>
-                  </SidebarMenuItem>
-                </Collapsible>
-              );
-            }
-            
-            // Si no tiene items, es un link simple
-            return (
-              <SidebarMenuItem key={item.href}>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === item.href}
-                >
-                  <Link href={item.href}>
-                    <item.icon />
-                    <span>{item.label}</span>
-                    {(item.premium && !isPremium) && <Icons.Premium className="ml-auto" />}
-                  </Link>
+<SidebarContent>
+  <SidebarMenu>
+    {menuStructure.map((item) => {
+      // Si tiene items, es un grupo collapsible
+      if ('items' in item && Array.isArray(item.items)) {
+        const isOpen = openGroups.includes(item.label);
+        const hasActiveChild = item.items.some(child => pathname === child.href);
+        
+        return (
+          <Collapsible
+            key={item.label}
+            open={isOpen || hasActiveChild}
+            onOpenChange={() => toggleGroup(item.label)}
+          >
+            <SidebarMenuItem>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton>
+                  <item.icon />
+                  <span>{item.label}</span>
+                  <ChevronDown className={`ml-auto transition-transform ${isOpen || hasActiveChild ? 'rotate-180' : ''}`} />
                 </SidebarMenuButton>
-              </SidebarMenuItem>
-            );
-          })}
-        </SidebarMenu>
-      </SidebarContent>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarMenuSub>
+                  {item.items.map((subItem) => (
+                    <SidebarMenuSubItem key={subItem.href}>
+                      <SidebarMenuSubButton
+                        asChild
+                        isActive={pathname === subItem.href}
+                      >
+                        <Link href={subItem.href}>
+                          <subItem.icon />
+                          <span>{subItem.label}</span>
+                          {(subItem.premium && !isPremium) && <Icons.Premium className="ml-auto" />}
+                        </Link>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  ))}
+                </SidebarMenuSub>
+              </CollapsibleContent>
+            </SidebarMenuItem>
+          </Collapsible>
+        );
+      }
+      
+      // Si no tiene items, es un link simple
+      if ('href' in item) {
+        return (
+          <SidebarMenuItem key={item.href}>
+            <SidebarMenuButton
+              asChild
+              isActive={pathname === item.href}
+            >
+              <Link href={item.href}>
+                <item.icon />
+                <span>{item.label}</span>
+                {(item.premium && !isPremium) && <Icons.Premium className="ml-auto" />}
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        );
+      }
+      
+      return null;
+    })}
+  </SidebarMenu>
+</SidebarContent>
       <SidebarFooter>
         <SidebarSeparator />
         <div className="p-2">
