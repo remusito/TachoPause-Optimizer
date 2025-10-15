@@ -30,12 +30,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Buscar la localidad/ciudad
     const result = response.data.results[0];
     let city = '';
     let country = '';
 
-    // Intentar encontrar la ciudad y el país
     for (const component of result.address_components) {
       if (component.types.includes('locality')) {
         city = component.long_name;
