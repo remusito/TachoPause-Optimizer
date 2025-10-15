@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Client } from '@googlemaps/google-maps-services-js';
+import { Client, Language } from '@googlemaps/google-maps-services-js';
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       params: {
         latlng: `${latitude},${longitude}`,
         key: apiKey,
-        language: 'es',
+        language: Language.es,
       },
     });
 
