@@ -59,7 +59,7 @@ export default function EditLoadPage() {
             setError('No tienes permiso para editar esta carga');
             return;
           }
-          setLoad({ ...data, id: loadDoc.id } as Load); // Fixed: Ensure id is included correctly
+          setLoad({ ...data, id: loadDoc.id } as Load);
           setFormData({
             name: data.name || '',
             material: data.material || '',
