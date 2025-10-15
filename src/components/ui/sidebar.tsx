@@ -2,7 +2,6 @@
 
 import * as React from 'react'
 import { Slot } from '@radix-ui/react-slot'
-import { cva, type VariantProps } from 'class-variance-authority'
 
 import { cn } from '@/lib/utils'
 
@@ -24,13 +23,15 @@ function useSidebar() {
   return context
 }
 
+interface SidebarProviderProps extends React.HTMLAttributes<HTMLDivElement> {
+  defaultOpen?: boolean
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+}
+
 const SidebarProvider = React.forwardRef
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & {
-    defaultOpen?: boolean
-    open?: boolean
-    onOpenChange?: (open: boolean) => void
-  }
+  SidebarProviderProps
 >(({ defaultOpen = true, open: openProp, onOpenChange, className, style, children, ...props }, ref) => {
   const [_open, _setOpen] = React.useState(openProp ?? defaultOpen)
   const open = openProp ?? _open
@@ -58,13 +59,15 @@ const SidebarProvider = React.forwardRef
 })
 SidebarProvider.displayName = 'SidebarProvider'
 
+interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
+  side?: 'left' | 'right'
+  variant?: 'sidebar' | 'floating' | 'inset'
+  collapsible?: 'offcanvas' | 'icon' | 'none'
+}
+
 const Sidebar = React.forwardRef
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & {
-    side?: 'left' | 'right'
-    variant?: 'sidebar' | 'floating' | 'inset'
-    collapsible?: 'offcanvas' | 'icon' | 'none'
-  }
+  SidebarProps
 >(({ side = 'left', variant = 'sidebar', collapsible = 'offcanvas', className, ...props }, ref) => {
   return (
     <div
@@ -144,12 +147,14 @@ const SidebarMenuItem = React.forwardRef
 ))
 SidebarMenuItem.displayName = 'SidebarMenuItem'
 
+interface SidebarMenuButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  asChild?: boolean
+  isActive?: boolean
+}
+
 const SidebarMenuButton = React.forwardRef
   HTMLButtonElement,
-  React.ButtonHTMLAttributes<HTMLButtonElement> & {
-    asChild?: boolean
-    isActive?: boolean
-  }
+  SidebarMenuButtonProps
 >(({ className, isActive, asChild = false, ...props }, ref) => {
   const Comp = asChild ? Slot : 'button'
   return (
@@ -188,12 +193,14 @@ const SidebarMenuSubItem = React.forwardRef
 ))
 SidebarMenuSubItem.displayName = 'SidebarMenuSubItem'
 
+interface SidebarMenuSubButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  asChild?: boolean
+  isActive?: boolean
+}
+
 const SidebarMenuSubButton = React.forwardRef
   HTMLButtonElement,
-  React.ButtonHTMLAttributes<HTMLButtonElement> & {
-    asChild?: boolean
-    isActive?: boolean
-  }
+  SidebarMenuSubButtonProps
 >(({ className, isActive, asChild = false, ...props }, ref) => {
   const Comp = asChild ? Slot : 'button'
   return (
@@ -224,11 +231,13 @@ const SidebarInset = React.forwardRef
 ))
 SidebarInset.displayName = 'SidebarInset'
 
+interface SidebarTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  asChild?: boolean
+}
+
 const SidebarTrigger = React.forwardRef
   HTMLButtonElement,
-  React.ButtonHTMLAttributes<HTMLButtonElement> & {
-    asChild?: boolean
-  }
+  SidebarTriggerProps
 >(({ className, onClick, asChild = false, ...props }, ref) => {
   const { open, setOpen } = useSidebar()
   const Comp = asChild ? Slot : 'button'
