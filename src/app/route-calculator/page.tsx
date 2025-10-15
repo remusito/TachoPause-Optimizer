@@ -20,11 +20,12 @@ import { SettingsSheet } from '../components/settings-sheet';
 import { PremiumPlaceholder } from '../components/premium-placeholder';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { calculateMultipleRouteDetails } from '@/ai/flows/calculate-route-details';
 import type { CalculateMultipleRouteDetailsOutput, RouteDetail } from '@/ai/flows/calculate-route-details';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { MainSidebar } from '../components/main-sidebar';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Navigation } from 'lucide-react'; // 👈 Agregado Navigation
 
 
 type RouteSegment = {
@@ -37,12 +38,78 @@ export default function RouteCalculatorPage() {
   const [segments, setSegments] = useState<RouteSegment[]>([{ id: 1, origin: '', destination: '' }]);
   
   const [isLoading, setIsLoading] = useState(false);
+  const [isGettingLocation, setIsGettingLocation] = useState(false); // 👈 Nuevo
   const [result, setResult] = useState<CalculateMultipleRouteDetailsOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleSegmentChange = (id: number, field: 'origin' | 'destination', value: string) => {
     setSegments(segments.map(seg => seg.id === id ? { ...seg, [field]: value } : seg));
+  };
+
+  // 👇 Nueva función para obtener ubicación actual
+  const handleUseCurrentLocation = async (segmentId: number) => {
+    if (!navigator.geolocation) {
+      toast({
+        title: 'No disponible',
+        description: 'Tu navegador no soporta geolocalización.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsGettingLocation(true);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        
+        // Convertir coordenadas a dirección legible usando geocoding reverso
+        try {
+          const locationString = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+          
+          setSegments(segments.map(seg => 
+            seg.id === segmentId 
+              ? { ...seg, origin: locationString } 
+              : seg
+          ));
+
+          toast({
+            title: '📍 Ubicación obtenida',
+            description: 'Se ha establecido tu ubicación actual como origen.',
+          });
+        } catch (error) {
+          console.error('Error getting location:', error);
+          toast({
+            title: 'Error',
+            description: 'No se pudo obtener tu ubicación.',
+            variant: 'destructive',
+          });
+        } finally {
+          setIsGettingLocation(false);
+        }
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        setIsGettingLocation(false);
+        
+        let errorMessage = 'No se pudo obtener tu ubicación.';
+        if (error.code === error.PERMISSION_DENIED) {
+          errorMessage = 'Debes permitir el acceso a tu ubicación en el navegador.';
+        }
+        
+        toast({
+          title: 'Error de ubicación',
+          description: errorMessage,
+          variant: 'destructive',
+        });
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    );
   };
 
   const addSegment = () => {
@@ -63,61 +130,61 @@ export default function RouteCalculatorPage() {
   };
 
 
-const handleCalculate = async () => {
-  const routeDetails: RouteDetail[] = segments.map(s => ({
-    origin: s.origin.trim(), 
-    destination: s.destination.trim()
-  }));
+  const handleCalculate = async () => {
+    const routeDetails: RouteDetail[] = segments.map(s => ({
+      origin: s.origin.trim(), 
+      destination: s.destination.trim()
+    }));
 
-  if (routeDetails.some(route => !route.origin || !route.destination)) {
-     toast({
-      title: 'Faltan datos',
-      description: 'Por favor, completa todos los campos de origen y destino.',
-      variant: 'destructive',
-    });
-    return;
-  }
-
-  setIsLoading(true);
-  setError(null);
-  setResult(null);
-
-  try {
-    console.log('🔵 Calculando ruta con:', routeDetails);
-    
-    const response = await fetch('/api/calculate-route', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ routeDetails }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Error al calcular la ruta');
+    if (routeDetails.some(route => !route.origin || !route.destination)) {
+       toast({
+        title: 'Faltan datos',
+        description: 'Por favor, completa todos los campos de origen y destino.',
+        variant: 'destructive',
+      });
+      return;
     }
 
-    const data = await response.json();
-    console.log('✅ Resultado:', data);
-    setResult(data);
-    toast({
-      title: 'Ruta calculada',
-      description: 'La ruta se ha calculado correctamente.',
-    });
-  } catch (e) {
-      console.error('❌ Error calculando ruta:', e);
-      const errorMessage = e instanceof Error ? e.message : 'Ha ocurrido un error desconocido.';
-      setError(errorMessage);
-      toast({
-          title: 'Error de Cálculo',
-          description: errorMessage,
-          variant: 'destructive',
+    setIsLoading(true);
+    setError(null);
+    setResult(null);
+
+    try {
+      console.log('🔵 Calculando ruta con:', routeDetails);
+      
+      const response = await fetch('/api/calculate-route', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ routeDetails }),
       });
-  } finally {
-    setIsLoading(false);
-  }
-};
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al calcular la ruta');
+      }
+
+      const data = await response.json();
+      console.log('✅ Resultado:', data);
+      setResult(data);
+      toast({
+        title: 'Ruta calculada',
+        description: 'La ruta se ha calculado correctamente.',
+      });
+    } catch (e) {
+        console.error('❌ Error calculando ruta:', e);
+        const errorMessage = e instanceof Error ? e.message : 'Ha ocurrido un error desconocido.';
+        setError(errorMessage);
+        toast({
+            title: 'Error de Cálculo',
+            description: errorMessage,
+            variant: 'destructive',
+        });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
 
   return (
@@ -176,15 +243,33 @@ const handleCalculate = async () => {
                         <div key={segment.id} className="p-4 border rounded-lg space-y-4 relative bg-muted/50">
                           <Label className='font-semibold'>Tramo {index + 1}</Label>
                           <div className="grid sm:grid-cols-2 gap-4">
+                              {/* 👇 Campo de Origen con botón de ubicación */}
                               <div className="space-y-2">
                                   <Label htmlFor={`origin-${segment.id}`}>Origen</Label>
-                                  <Input 
-                                    id={`origin-${segment.id}`} 
-                                    placeholder="Ej: Barcelona, España" 
-                                    value={segment.origin} 
-                                    onChange={(e) => handleSegmentChange(segment.id, 'origin', e.target.value)}
-                                    disabled={isLoading}
-                                  />
+                                  <div className="flex gap-2">
+                                    <Input 
+                                      id={`origin-${segment.id}`} 
+                                      placeholder="Ej: Barcelona, España" 
+                                      value={segment.origin} 
+                                      onChange={(e) => handleSegmentChange(segment.id, 'origin', e.target.value)}
+                                      disabled={isLoading}
+                                      className="flex-1"
+                                    />
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="icon"
+                                      onClick={() => handleUseCurrentLocation(segment.id)}
+                                      disabled={isLoading || isGettingLocation}
+                                      title="Usar mi ubicación actual"
+                                    >
+                                      {isGettingLocation ? (
+                                        <Icons.Spinner className="h-4 w-4 animate-spin" />
+                                      ) : (
+                                        <Navigation className="h-4 w-4" />
+                                      )}
+                                    </Button>
+                                  </div>
                               </div>
                               <div className="space-y-2">
                                   <Label htmlFor={`destination-${segment.id}`}>Destino</Label>
