@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { MainSidebar } from '@/components/main-sidebar';
-import { SettingsSheet } from '@/components/settings-sheet';
+import { SettingsSheet } from '@/app/components/settings-sheet';
 import { useAuth } from '@/firebase';
 import { useFirebase } from '@/firebase/provider';
 import { doc, getDoc, deleteDoc } from 'firebase/firestore';
