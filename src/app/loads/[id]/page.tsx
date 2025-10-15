@@ -160,6 +160,12 @@ export default function LoadDetailPage() {
                         </div>
                         {isOwner && (
                           <div className="flex gap-2">
+                            <Button asChild variant="outline" size="sm">
+                              <Link href={`/loads/edit/${load.id}`}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Editar
+                              </Link>
+                            </Button>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <Button variant="destructive" size="sm" disabled={isDeleting}>
