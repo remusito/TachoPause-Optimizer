@@ -1,278 +1,266 @@
-'use client';
+'use client'
 
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
-import { MainSidebar } from '@/components/main-sidebar';
-import { SettingsSheet } from '@/app/components/settings-sheet';
-import { useAuth } from '@/firebase';
-import { useFirebase } from '@/firebase/provider';
-import { doc, getDoc, deleteDoc } from 'firebase/firestore';
-import { useParams, useRouter } from 'next/navigation';
-import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, MapPin, Phone, Radio, Clock, Package, Edit, Trash2, FileText, Map } from 'lucide-react';
-import Link from 'next/link';
-import { Skeleton } from '@/components/ui/skeleton';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Icons } from '@/components/icons';
+import * as React from 'react'
+import { Slot } from '@radix-ui/react-slot'
+import { cva, type VariantProps } from 'class-variance-authority'
 
-interface Load {
-  id: string;
-  name: string;
-  material: string;
-  radioChannel?: string;
-  phone?: string;
-  schedule?: string;
-  location?: string;
-  notes?: string;
-  createdBy: string;
-  userId: string;
-  createdAt: any;
+import { cn } from '@/lib/utils'
+
+const SIDEBAR_COOKIE_NAME = 'sidebar:state'
+const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
+
+const sidebarContext = React.createContext<{
+  state: 'expanded' | 'collapsed'
+  open: boolean
+  setOpen: (open: boolean) => void
+} | null>(null)
+
+function useSidebar() {
+  const context = React.useContext(sidebarContext)
+  if (!context) {
+    throw new Error('useSidebar must be used within a SidebarProvider')
+  }
+
+  return context
 }
 
-export default function LoadDetailPage() {
-  const params = useParams();
-  const router = useRouter();
-  const { user } = useAuth();
-  const { firestore } = useFirebase();
-  const { toast } = useToast();
-  const [load, setLoad] = useState<Load | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  useEffect(() => {
-    if (!firestore || !params.id) return;
-
-    const fetchLoad = async () => {
-      try {
-        const loadRef = doc(firestore, 'loads', params.id as string);
-        const loadSnap = await getDoc(loadRef);
-
-        if (loadSnap.exists()) {
-          setLoad({ id: loadSnap.id, ...loadSnap.data() } as Load);
-        } else {
-          toast({
-            title: 'No encontrado',
-            description: 'La carga solicitada no existe.',
-            variant: 'destructive',
-          });
-          router.push('/loads');
-        }
-      } catch (error) {
-        console.error('Error fetching load:', error);
-        toast({
-          title: 'Error',
-          description: 'No se pudo cargar la información.',
-          variant: 'destructive',
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchLoad();
-  }, [firestore, params.id, router, toast]);
-
-  const handleDelete = async () => {
-    if (!firestore || !load || !user) return;
-
-    setIsDeleting(true);
-    try {
-      const loadRef = doc(firestore, 'loads', load.id);
-      await deleteDoc(loadRef);
-
-      toast({
-        title: '✅ Eliminado',
-        description: 'La información se ha eliminado correctamente.',
-      });
-
-      router.push('/loads');
-    } catch (error) {
-      console.error('Error deleting load:', error);
-      toast({
-        title: 'Error',
-        description: 'No se pudo eliminar la información.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const isOwner = user && load && user.uid === load.userId;
+const SidebarProvider = React.forwardRef
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & {
+    defaultOpen?: boolean
+    open?: boolean
+    onOpenChange?: (open: boolean) => void
+  }
+>(({ defaultOpen = true, open: openProp, onOpenChange, className, style, children, ...props }, ref) => {
+  const [_open, _setOpen] = React.useState(openProp ?? defaultOpen)
+  const open = openProp ?? _open
+  const setOpen = React.useCallback(
+    (value: boolean | ((value: boolean) => boolean)) => {
+      const newOpen = typeof value === 'function' ? value(open) : value
+      _setOpen(newOpen)
+      onOpenChange?.(newOpen)
+    },
+    [open, onOpenChange]
+  )
 
   return (
-    <SidebarProvider>
-      <MainSidebar />
-      <SidebarInset>
-        <div className="flex flex-col min-h-dvh bg-background text-foreground">
-          <header className="w-full p-4 sm:p-6 flex items-center justify-between border-b">
-            <div className="flex items-center gap-2">
-              <SidebarTrigger className="md:hidden">
-                <Icons.Menu />
-              </SidebarTrigger>
-              <Button variant="ghost" size="icon" asChild>
-                <Link href="/loads">
-                  <ArrowLeft className="h-5 w-5" />
-                </Link>
-              </Button>
-              <Package className="h-6 w-6 text-primary" />
-              <h1 className="text-lg sm:text-xl font-bold">Detalle de Carga</h1>
-            </div>
-            <SettingsSheet />
-          </header>
+    <sidebarContext.Provider value={{ state: open ? 'expanded' : 'collapsed', open, setOpen }}>
+      <div
+        ref={ref}
+        className={cn('flex h-screen w-full overflow-hidden bg-background', className)}
+        style={style}
+        {...props}
+      >
+        {children}
+      </div>
+    </sidebarContext.Provider>
+  )
+})
+SidebarProvider.displayName = 'SidebarProvider'
 
-          <main className="flex-1 w-full p-4 sm:p-6">
-            <div className="max-w-3xl mx-auto space-y-6">
-              {loading ? (
-                <Card>
-                  <CardHeader>
-                    <Skeleton className="h-8 w-3/4 mb-2" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <Skeleton className="h-20 w-full" />
-                    <Skeleton className="h-20 w-full" />
-                  </CardContent>
-                </Card>
-              ) : load ? (
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-2">
-                        <CardTitle className="text-2xl">{load.name}</CardTitle>
-                        <CardDescription className="flex items-center gap-2">
-                          <Package className="h-4 w-4" />
-                          {load.material}
-                        </CardDescription>
-                      </div>
-                      {isOwner && (
-                        <div className="flex gap-2">
-                          <Button asChild variant="outline" size="sm">
-                            <Link href={`/loads/edit/${load.id}`}>
-                              <Edit className="h-4 w-4 mr-2" />
-                              Editar
-                            </Link>
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="destructive" size="sm" disabled={isDeleting}>
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Esta acción no se puede deshacer. Se eliminará permanentemente la información de esta carga.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleDelete}>
-                                  Eliminar
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      )}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="space-y-4">
-                      <h3 className="font-semibold text-lg">Información de contacto</h3>
-                      <div className="grid gap-4">
-                        {load.location && (
-                          <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                            <MapPin className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                            <div className="flex-1">
-                              <p className="font-medium text-sm">Ubicación</p>
-                              <div className="flex items-center gap-2">
-                                <p className="text-sm text-muted-foreground">{load.location}</p>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  asChild
-                                >
-                                  <a
-                                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(load.location)}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    <Map className="h-4 w-4" />
-                                    Abrir en Google Maps
-                                  </a>
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                        {load.phone && (
-                          <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                            <Phone className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                            <div className="flex-1">
-                              <p className="font-medium text-sm">Teléfono</p>
-                              <a href={`tel:${load.phone}`} className="text-sm text-muted-foreground hover:text-primary">
-                                {load.phone}
-                              </a>
-                            </div>
-                          </div>
-                        )}
-                        {load.radioChannel && (
-                          <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                            <Radio className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                            <div className="flex-1">
-                              <p className="font-medium text-sm">Canal de Radio</p>
-                              <p className="text-sm text-muted-foreground">{load.radioChannel}</p>
-                            </div>
-                          </div>
-                        )}
-                        {load.schedule && (
-                          <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                            <Clock className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                            <div className="flex-1">
-                              <p className="font-medium text-sm">Horario</p>
-                              <p className="text-sm text-muted-foreground">{load.schedule}</p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    {load.notes && (
-                      <div className="space-y-2">
-                        <h3 className="font-semibold text-lg flex items-center gap-2">
-                          <FileText className="h-5 w-5" />
-                          Notas adicionales
-                        </h3>
-                        <div className="p-4 rounded-lg bg-muted/50">
-                          <p className="text-sm whitespace-pre-wrap">{load.notes}</p>
-                        </div>
-                      </div>
-                    )}
-                    <div className="pt-4 border-t">
-                      <p className="text-xs text-muted-foreground">
-                        Agregado por: {load.createdBy}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ) : null}
-            </div>
-          </main>
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
-  );
+const Sidebar = React.forwardRef
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & {
+    side?: 'left' | 'right'
+    variant?: 'sidebar' | 'floating' | 'inset'
+    collapsible?: 'offcanvas' | 'icon' | 'none'
+  }
+>(({ side = 'left', variant = 'sidebar', collapsible = 'offcanvas', className, ...props }, ref) => {
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        'flex h-full w-64 flex-col border-r bg-background',
+        side === 'right' && 'border-r-0 border-l',
+        className
+      )}
+      {...props}
+    />
+  )
+})
+Sidebar.displayName = 'Sidebar'
+
+const SidebarHeader = React.forwardRef
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn('flex flex-col gap-2 px-4 py-3', className)}
+    {...props}
+  />
+))
+SidebarHeader.displayName = 'SidebarHeader'
+
+const SidebarFooter = React.forwardRef
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn('mt-auto flex flex-col gap-2 px-4 py-3', className)}
+    {...props}
+  />
+))
+SidebarFooter.displayName = 'SidebarFooter'
+
+const SidebarContent = React.forwardRef
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn('flex-1 overflow-auto', className)}
+    {...props}
+  />
+))
+SidebarContent.displayName = 'SidebarContent'
+
+const SidebarSeparator = React.forwardRef
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn('my-2 mx-2 h-px bg-border', className)}
+    {...props}
+  />
+))
+SidebarSeparator.displayName = 'SidebarSeparator'
+
+const SidebarMenu = React.forwardRef
+  HTMLUListElement,
+  React.HTMLAttributes<HTMLUListElement>
+>(({ className, ...props }, ref) => (
+  <ul ref={ref} className={cn('flex flex-col gap-1 px-2', className)} {...props} />
+))
+SidebarMenu.displayName = 'SidebarMenu'
+
+const SidebarMenuItem = React.forwardRef
+  HTMLLIElement,
+  React.HTMLAttributes<HTMLLIElement>
+>(({ className, ...props }, ref) => (
+  <li ref={ref} className={cn('', className)} {...props} />
+))
+SidebarMenuItem.displayName = 'SidebarMenuItem'
+
+const SidebarMenuButton = React.forwardRef
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement> & {
+    asChild?: boolean
+    isActive?: boolean
+  }
+>(({ className, isActive, asChild = false, ...props }, ref) => {
+  const Comp = asChild ? Slot : 'button'
+  return (
+    <Comp
+      ref={ref}
+      className={cn(
+        'w-full flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+        isActive
+          ? 'bg-primary text-primary-foreground'
+          : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+        className
+      )}
+      {...props}
+    />
+  )
+})
+SidebarMenuButton.displayName = 'SidebarMenuButton'
+
+const SidebarMenuSub = React.forwardRef
+  HTMLUListElement,
+  React.HTMLAttributes<HTMLUListElement>
+>(({ className, ...props }, ref) => (
+  <ul
+    ref={ref}
+    className={cn('ml-4 flex flex-col gap-1 border-l border-muted px-3 py-2', className)}
+    {...props}
+  />
+))
+SidebarMenuSub.displayName = 'SidebarMenuSub'
+
+const SidebarMenuSubItem = React.forwardRef
+  HTMLLIElement,
+  React.HTMLAttributes<HTMLLIElement>
+>(({ className, ...props }, ref) => (
+  <li ref={ref} className={cn('', className)} {...props} />
+))
+SidebarMenuSubItem.displayName = 'SidebarMenuSubItem'
+
+const SidebarMenuSubButton = React.forwardRef
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement> & {
+    asChild?: boolean
+    isActive?: boolean
+  }
+>(({ className, isActive, asChild = false, ...props }, ref) => {
+  const Comp = asChild ? Slot : 'button'
+  return (
+    <Comp
+      ref={ref}
+      className={cn(
+        'w-full flex items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium transition-colors',
+        isActive
+          ? 'bg-primary text-primary-foreground'
+          : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+        className
+      )}
+      {...props}
+    />
+  )
+})
+SidebarMenuSubButton.displayName = 'SidebarMenuSubButton'
+
+const SidebarInset = React.forwardRef
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn('relative flex flex-1 flex-col overflow-hidden', className)}
+    {...props}
+  />
+))
+SidebarInset.displayName = 'SidebarInset'
+
+const SidebarTrigger = React.forwardRef
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement> & {
+    asChild?: boolean
+  }
+>(({ className, onClick, asChild = false, ...props }, ref) => {
+  const { open, setOpen } = useSidebar()
+  const Comp = asChild ? Slot : 'button'
+
+  return (
+    <Comp
+      ref={ref}
+      onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+        onClick?.(event)
+        setOpen(!open)
+      }}
+      className={cn('rounded-md p-2 hover:bg-accent', className)}
+      {...props}
+    />
+  )
+})
+SidebarTrigger.displayName = 'SidebarTrigger'
+
+export {
+  Sidebar,
+  SidebarProvider,
+  SidebarHeader,
+  SidebarFooter,
+  SidebarContent,
+  SidebarSeparator,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
+  SidebarInset,
+  SidebarTrigger,
+  useSidebar,
 }
