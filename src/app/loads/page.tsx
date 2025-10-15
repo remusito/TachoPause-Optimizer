@@ -8,13 +8,25 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/s
 import { SettingsSheet } from '../components/settings-sheet';
 import { MainSidebar } from '../components/main-sidebar';
 import { useAuth } from '@/firebase';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, deleteDoc, doc } from 'firebase/firestore';
 import { useFirebase } from '@/firebase/provider';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
-import { MapPin, Phone, Radio, Clock, Package, Plus } from 'lucide-react';
+import { MapPin, Phone, Radio, Clock, Package, Plus, Edit, Trash2 } from 'lucide-react';
 import { FooterWithAd } from '../components/footer-with-ad';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface Load {
   id: string;
@@ -24,13 +36,16 @@ interface Load {
   phone?: string;
   schedule?: string;
   location?: string;
+  notes?: string;
   createdBy: string;
+  userId: string;
   createdAt: string;
 }
 
 export default function LoadsPage() {
   const { user, loading: authLoading } = useAuth();
   const { firestore } = useFirebase();
+  const { toast } = useToast();
   const [loads, setLoads] = useState<Load[]>([]);
   const [filteredLoads, setFilteredLoads] = useState<Load[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,13 +69,18 @@ export default function LoadsPage() {
         setFilteredLoads(loadsData);
       } catch (error) {
         console.error('Error fetching loads:', error);
+        toast({
+          title: 'Error',
+          description: 'No se pudo cargar la lista de cargas.',
+          variant: 'destructive',
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchLoads();
-  }, [firestore]);
+  }, [firestore, toast]);
 
   useEffect(() => {
     const filtered = loads.filter(load =>
@@ -70,6 +90,26 @@ export default function LoadsPage() {
     );
     setFilteredLoads(filtered);
   }, [searchTerm, loads]);
+
+  const handleDelete = async (loadId: string) => {
+    if (!firestore || !user) return;
+    try {
+      await deleteDoc(doc(firestore, 'loads', loadId));
+      setLoads(loads.filter((load) => load.id !== loadId));
+      setFilteredLoads(filteredLoads.filter((load) => load.id !== loadId));
+      toast({
+        title: '✅ Eliminado',
+        description: 'La carga se ha eliminado correctamente.',
+      });
+    } catch (error) {
+      console.error('Error deleting load:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo eliminar la carga.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   return (
     <SidebarProvider>
@@ -167,11 +207,44 @@ export default function LoadsPage() {
                               {load.material}
                             </CardDescription>
                           </div>
-                          <Button asChild variant="outline" size="sm">
-                            <Link href={`/loads/${load.id}`}>
-                              Ver detalles
-                            </Link>
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button asChild variant="outline" size="sm">
+                              <Link href={`/loads/${load.id}`}>
+                                Ver detalles
+                              </Link>
+                            </Button>
+                            {user && load.userId === user.uid && (
+                              <>
+                                <Button asChild variant="outline" size="sm">
+                                  <Link href={`/loads/edit/${load.id}`}>
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Editar
+                                  </Link>
+                                </Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="destructive" size="sm">
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Esta acción no se puede deshacer. Se eliminará permanentemente la información de esta carga.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleDelete(load.id)}>
+                                        Eliminar
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </CardHeader>
                       <CardContent className="grid sm:grid-cols-2 gap-3 text-sm">
