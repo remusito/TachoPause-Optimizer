@@ -12,7 +12,7 @@ import { useFirebase } from '@/firebase/provider';
 import { doc, getDoc, deleteDoc } from 'firebase/firestore';
 import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, MapPin, Phone, Radio, Clock, Package, Edit, Trash2, FileText } from 'lucide-react';
+import { ArrowLeft, MapPin, Phone, Radio, Clock, Package, Edit, Trash2, FileText, Map } from 'lucide-react';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -201,11 +201,26 @@ export default function LoadDetailPage() {
                               <MapPin className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                               <div className="flex-1">
                                 <p className="font-medium text-sm">Ubicación</p>
-                                <p className="text-sm text-muted-foreground">{load.location}</p>
+                                <div className="flex items-center gap-2">
+                                  <p className="text-sm text-muted-foreground">{load.location}</p>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    asChild
+                                  >
+                                    <a
+                                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(load.location)}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      <Map className="h-4 w-4" />
+                                      Abrir en Google Maps
+                                    </a>
+                                  </Button>
+                                </div>
                               </div>
                             </div>
                           )}
-
                           {load.phone && (
                             <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
                               <Phone className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
@@ -217,7 +232,6 @@ export default function LoadDetailPage() {
                               </div>
                             </div>
                           )}
-
                           {load.radioChannel && (
                             <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
                               <Radio className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
@@ -227,46 +241,6 @@ export default function LoadDetailPage() {
                               </div>
                             </div>
                           )}
-
                           {load.schedule && (
                             <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                              <Clock className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                              <div className="flex-1">
-                                <p className="font-medium text-sm">Horario</p>
-                                <p className="text-sm text-muted-foreground">{load.schedule}</p>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Notas adicionales */}
-                      {load.notes && (
-                        <div className="space-y-2">
-                          <h3 className="font-semibold text-lg flex items-center gap-2">
-                            <FileText className="h-5 w-5" />
-                            Notas adicionales
-                          </h3>
-                          <div className="p-4 rounded-lg bg-muted/50">
-                            <p className="text-sm whitespace-pre-wrap">{load.notes}</p>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Información del creador */}
-                      <div className="pt-4 border-t">
-                        <p className="text-xs text-muted-foreground">
-                          Agregado por: {load.createdBy}
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </>
-              ) : null}
-            </div>
-          </main>
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
-  );
-}
+                              <Clock className="h-5 w-
