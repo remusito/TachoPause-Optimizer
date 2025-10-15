@@ -1,60 +1,57 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { Client, Language } from '@googlemaps/google-maps-services-js';
+import { NextResponse } from 'next/server';
+import { Loader } from '@googlemaps/js-api-loader';
 
-export async function POST(request: NextRequest) {
+export async function POST(req: Request) {
   try {
-    const { latitude, longitude } = await request.json();
-    
-    const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'Google Maps API key is not configured' },
-        { status: 500 }
-      );
+    const { lat, lng } = await req.json();
+
+    // Validar entrada
+    if (!lat || !lng) {
+      return NextResponse.json({ error: 'Faltan latitud o longitud' }, { status: 400 });
     }
 
-    const client = new Client({});
-    
-    const response = await client.reverseGeocode({
-      params: {
-        latlng: `${latitude},${longitude}`,
-        key: apiKey,
-        language: Language.es,
-      },
+    // Inicializar Google Maps API
+    const loader = new Loader({
+      apiKey: process.env.GOOGLE_MAPS_API_KEY || '',
+      version: 'weekly',
+      libraries: ['geocoding'],
     });
 
-    if (response.data.results.length === 0) {
-      return NextResponse.json(
-        { error: 'No se encontró ninguna dirección' },
-        { status: 404 }
-      );
+    const google = await loader.load();
+    const geocoder = new google.maps.Geocoder();
+
+    // Hacer geocodificación inversa
+    const response = await geocoder.geocode({ location: { lat, lng } });
+
+    if (!response.results || response.results.length === 0) {
+      return NextResponse.json({ error: 'No se encontraron resultados' }, { status: 404 });
     }
 
-    const result = response.data.results[0];
+    const result = response.results[0];
     let city = '';
     let country = '';
 
+    // Procesar componentes de la dirección
     for (const component of result.address_components) {
-      if (component.types.includes('locality')) {
+      // Usar aserción de tipo para evitar error de TypeScript
+      const types = component.types as string[];
+      if (types.includes('locality')) {
         city = component.long_name;
-      } else if (component.types.includes('administrative_area_level_2') && !city) {
+      } else if (types.includes('administrative_area_level_2') && !city) {
         city = component.long_name;
-      } else if (component.types.includes('country')) {
+      } else if (types.includes('country')) {
         country = component.long_name;
       }
     }
 
-    const formattedAddress = city && country ? `${city}, ${country}` : result.formatted_address;
-
     return NextResponse.json({
-      address: formattedAddress,
-      fullAddress: result.formatted_address,
+      city: city || 'Desconocido',
+      country: country || 'Desconocido',
+      formatted_address: result.formatted_address,
     });
-
-  } catch (error: any) {
-    console.error('Error in reverse geocoding:', error);
+  } catch (error) {
     return NextResponse.json(
-      { error: error.message || 'Failed to get address' },
+      { error: 'Error en geocodificación: ' + (error as Error).message },
       { status: 500 }
     );
   }
