@@ -13,7 +13,7 @@ import { useFirebase } from '@/firebase/provider';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
-import { MapPin, Phone, Radio, Clock, Package, Plus, Edit, Trash2 } from 'lucide-react';
+import { MapPin, Phone, Radio, Clock, Package, Plus, Edit, Trash2, Map } from 'lucide-react';
 import { FooterWithAd } from '../components/footer-with-ad';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -252,50 +252,18 @@ export default function LoadsPage() {
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <MapPin className="h-4 w-4 flex-shrink-0" />
                             <span className="truncate">{load.location}</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              asChild
+                            >
+                              <a
+                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(load.location)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <Map className="h-4 w-4" />
+                              </a>
+                            </Button>
                           </div>
-                        )}
-                        {load.phone && (
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <Phone className="h-4 w-4 flex-shrink-0" />
-                            <span>{load.phone}</span>
-                          </div>
-                        )}
-                        {load.radioChannel && (
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <Radio className="h-4 w-4 flex-shrink-0" />
-                            <span>Canal {load.radioChannel}</span>
-                          </div>
-                        )}
-                        {load.schedule && (
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <Clock className="h-4 w-4 flex-shrink-0" />
-                            <span>{load.schedule}</span>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-
-              {!user && (
-                <Card className="border-dashed">
-                  <CardContent className="flex flex-col items-center justify-center py-8">
-                    <p className="text-center text-muted-foreground mb-4">
-                      Inicia sesión para agregar información de puntos de carga
-                    </p>
-                    <Button asChild>
-                      <Link href="/login">Iniciar Sesión</Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </main>
-
-          <FooterWithAd />
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
-  );
-}
+                       
