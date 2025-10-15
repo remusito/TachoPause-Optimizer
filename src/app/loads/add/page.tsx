@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Icons } from '@/components/icons';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { SettingsSheet } from '../../components/settings-sheet';
+import { SettingsSheet } from '@/app/components/settings-sheet';
 import { MainSidebar } from '../../components/main-sidebar';
 import { useAuth } from '@/firebase';
 import { useFirebase } from '@/firebase/provider';
