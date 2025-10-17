@@ -173,10 +173,10 @@ const sidebarMenuButtonVariants = cva(
 )
 
 interface SidebarMenuButtonProps
-  extends React.ComponentProps<typeof Button>,
+  extends Omit<React.ComponentProps<typeof Button>, 'variant'>,
     VariantProps<typeof sidebarMenuButtonVariants> {
   asChild?: boolean
-  isActive?: boolean // Añade esta línea
+  isActive?: boolean
 }
 
 const SidebarMenuButton = React.forwardRef<HTMLButtonElement, SidebarMenuButtonProps>(
@@ -256,10 +256,10 @@ const sidebarMenuSubButtonVariants = cva(
 )
 
 interface SidebarMenuSubButtonProps
-  extends React.ComponentProps<typeof Button>,
+  extends Omit<React.ComponentProps<typeof Button>, 'variant'>,
     VariantProps<typeof sidebarMenuSubButtonVariants> {
   asChild?: boolean
-  isActive?: boolean // Esta línea debe estar presente
+  isActive?: boolean
 }
 
 const SidebarMenuSubButton = React.forwardRef<HTMLButtonElement, SidebarMenuSubButtonProps>(
