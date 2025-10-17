@@ -176,6 +176,7 @@ interface SidebarMenuButtonProps
   extends React.ComponentProps<typeof Button>,
     VariantProps<typeof sidebarMenuButtonVariants> {
   asChild?: boolean
+  isActive?: boolean // Añade esta línea
 }
 
 const SidebarMenuButton = React.forwardRef<HTMLButtonElement, SidebarMenuButtonProps>(
