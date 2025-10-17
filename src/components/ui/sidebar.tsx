@@ -307,8 +307,22 @@ const SidebarInset = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>
 }
 
-const SidebarTrigger = ({ children }: { children: React.ReactNode }) => {
-  return <Button variant="ghost">{children}</Button>
+interface SidebarTriggerProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  children: React.ReactNode
+  className?: string
+}
+
+const SidebarTrigger = ({ children, className, ...props }: SidebarTriggerProps) => {
+  return (
+    <Button
+      variant="ghost"
+      className={cn(className)}
+      {...props}
+    >
+      {children}
+    </Button>
+  )
 }
 
 export {
