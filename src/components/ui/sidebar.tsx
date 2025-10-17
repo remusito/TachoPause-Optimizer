@@ -221,6 +221,7 @@ interface SidebarMenuSubItemProps
   extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof sidebarMenuSubItemVariants> {
   asChild?: boolean
+  isActive?: boolean // Añade esta línea
 }
 
 const SidebarMenuSubItem = React.forwardRef<
