@@ -1,53 +1,64 @@
 'use client';
 
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
-import { MainSidebar } from '@/components/main-sidebar';
-import { SettingsSheet } from '@/app/components/settings-sheet';
-import Link from 'next/link';
-import { Package } from 'lucide-react';
+import { PauseTracker } from '@/app/components/pause-tracker';
 import { Icons } from '@/components/icons';
+import { SettingsSheet } from '@/app/components/settings-sheet';
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from '@/components/ui/sidebar';
+import { usePremium } from '@/hooks/use-premium';
+import { MainSidebar } from './components/main-sidebar';
+import { FooterWithAd } from './components/footer-with-ad';
+import { WelcomeOverlay } from './components/welcome-overlay'; // 👈 NUEVO
+import { useEffect } from 'react';
+import { useAchievements } from '@/hooks/use-achievements-provider';
 
-export default function HomePage() {
+export default function Home() {
+  const { isPremium } = usePremium();
+  const { trackAppUsage } = useAchievements();
+
+  useEffect(() => {
+    trackAppUsage();
+  }, [trackAppUsage]);
+
   return (
     <SidebarProvider>
       <MainSidebar />
       <SidebarInset>
         <div className="flex flex-col min-h-dvh bg-background text-foreground">
-          <header className="w-full p-4 sm:p-6 flex items-center justify-between border-b">
+          <header className="w-full p-4 sm:p-6 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <SidebarTrigger className="md:hidden">
                 <Icons.Menu />
               </SidebarTrigger>
-              <Package className="h-6 w-6 text-primary" />
-              <h1 className="text-lg sm:text-xl font-bold">TachoPause Optimizer</h1>
+              <Icons.Truck className="h-6 w-6 text-primary" />
+              <h1 className="text-lg sm:text-xl font-bold text-foreground">
+                TachoPause {isPremium ? <span className='text-primary'>Premium</span> : <span>Optimizer</span>}
+              </h1>
             </div>
             <SettingsSheet />
           </header>
-          <main className="flex-1 w-full p-4 sm:p-6">
-            <div className="max-w-3xl mx-auto space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Bienvenido a TachoPause Optimizer</CardTitle>
-                  <CardDescription>
-                    Gestiona tus puntos de carga y descarga de manera eficiente.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Explora la lista de cargas disponibles o agrega una nueva.
-                  </p>
-                  <Button asChild>
-                    <Link href="/loads">Ver Cargas</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
+          
+          <main className="flex flex-1 items-center justify-center w-full px-4">
+            <PauseTracker />
           </main>
+          
+          {!isPremium && (
+            <div className="w-full text-center py-2">
+              <p className="text-xs text-muted-foreground">
+                Hecho con ❤️ para los héroes de la carretera.
+              </p>
+            </div>
+          )}
+          
+          <FooterWithAd />
         </div>
       </SidebarInset>
+      
+      {/* 👇 OVERLAY DE BIENVENIDA */}
+      <WelcomeOverlay />
     </SidebarProvider>
   );
 }
