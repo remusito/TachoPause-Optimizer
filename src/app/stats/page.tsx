@@ -18,7 +18,7 @@ import {
 import { SettingsSheet } from '../components/settings-sheet';
 import { BarChart as RechartsBarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
-import { MainSidebar } from '../components/main-sidebar';
+import { MainSidebar } from '@/components/main-sidebar';
 import { useAuth } from '@/firebase';
 import { useFirestore } from '@/hooks/use-firestore';
 import { useCollection } from '@/hooks/use-collection';
