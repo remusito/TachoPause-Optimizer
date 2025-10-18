@@ -16,7 +16,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { SettingsSheet } from '../components/settings-sheet';
-import { MainSidebar } from '../components/main-sidebar';
+import { MainSidebar } from '@/components/main-sidebar';
 import { Button } from '@/components/ui/button';
 import { PremiumPlaceholder } from '../components/premium-placeholder';
 
