@@ -16,7 +16,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { SettingsSheet } from '../components/settings-sheet';
-import { MainSidebar } from '../components/main-sidebar';
+import { MainSidebar } from '@/components/main-sidebar';
 import { useEffect } from 'react';
 import { useAchievements } from '@/hooks/use-achievements-provider';
 
