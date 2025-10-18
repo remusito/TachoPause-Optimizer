@@ -12,7 +12,7 @@ import { addHistoryItem } from '@/lib/data';
 import { useAuth, useFirestore } from '@/firebase';
 
 // El sidebar solo se mostrará si esta variable es true (en home)
-const showSidebar = false; // <-- CAMBIO: establecer según la página
+const showSidebar = false;
 
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371e3;
@@ -20,9 +20,9 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
   const φ2 = (lat2 * Math.PI) / 180;
   const Δφ = ((lat2 - lat1) * Math.PI) / 180;
   const Δλ = ((lon2 - lon1) * Math.PI) / 180;
-  const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+  const a = Math.sin(Δφ / 2) ** 2 +
             Math.cos(φ1) * Math.cos(φ2) *
-            Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+            Math.sin(Δλ / 2) ** 2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -38,16 +38,16 @@ const formatTime = (milliseconds: number) => {
 export default function SpeedometerPage() {
   const [speed, setSpeed] = useState(0);
   const [isTracking, setIsTracking] = useState(false);
-  const [error, setError] = useState(null);
-  const watchIdRef = useRef(null);
+  const [error, setError] = useState<string | null>(null);
+  const watchIdRef = useRef<number | null>(null); // <-- tipo correcto
+  const lastPositionRef = useRef<GeolocationPosition | null>(null); // <-- tipo correcto
+  const speedSamplesRef = useRef<number[]>([]);
   const { toast } = useToast();
   const [maxSpeed, setMaxSpeed] = useState(0);
   const [averageSpeed, setAverageSpeed] = useState(0);
   const [distance, setDistance] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [startTime, setStartTime] = useState(null);
-  const lastPositionRef = useRef(null);
-  const speedSamplesRef = useRef([]);
+  const [startTime, setStartTime] = useState<number | null>(null);
   const { user } = useAuth();
   const db = useFirestore();
   const { updateAchievementProgress, incrementAchievementProgress } = useAchievements();
@@ -71,9 +71,8 @@ export default function SpeedometerPage() {
         position.coords.latitude,
         position.coords.longitude
       );
-      const newTotalDistance = distance + newDistance;
-      setDistance(newTotalDistance);
-      updateAchievementProgress('marathoner', newTotalDistance / 1000);
+      setDistance(prev => prev + newDistance);
+      updateAchievementProgress('marathoner', (distance + newDistance) / 1000);
     }
 
     lastPositionRef.current = position;
@@ -119,7 +118,7 @@ export default function SpeedometerPage() {
 
   const stopTracking = (showToast = true) => {
     setIsTracking(false);
-    if (watchIdRef.current) {
+    if (watchIdRef.current !== null) {
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
     }
@@ -151,12 +150,12 @@ export default function SpeedometerPage() {
   }, [isTracking, startTime, incrementAchievementProgress, user]);
 
   useEffect(() => {
-    return () => { if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current); };
+    return () => { if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current); };
   }, []);
 
   return (
     <div className="flex min-h-dvh">
-      {showSidebar && <MainSidebar />} {/* <-- CAMBIO */}
+      {showSidebar && <MainSidebar />}
       <div className="flex-1 flex flex-col bg-background text-foreground p-4 sm:p-6">
         <header className="w-full flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
@@ -167,7 +166,7 @@ export default function SpeedometerPage() {
         </header>
 
         <main className="flex-1">
-          {/* Aquí va todo tu contenido original de la página */}
+          {/* Aquí va tu contenido original de la página */}
         </main>
       </div>
     </div>
