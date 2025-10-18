@@ -26,7 +26,7 @@ import type { FindServiceAreasOutput } from '@/ai/flows/optimize-route-breaks';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { MainSidebar } from '../components/main-sidebar';
+import { MainSidebar } from '@/components/main-sidebar';
 
 
 export default function RouteOptimizerPage() {
