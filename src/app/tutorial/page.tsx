@@ -12,30 +12,22 @@ import { Icons } from '@/components/icons';
 import Link from 'next/link';
 import { SettingsSheet } from '../components/settings-sheet';
 import { MainSidebar } from '@/components/ui/sidebar';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useAchievements } from '@/hooks/use-achievements-provider';
 
 export default function TutorialPage() {
   const { unlockAchievement } = useAchievements();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     unlockAchievement('tutorial_guru');
   }, [unlockAchievement]);
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen(prev => !prev);
-  };
-
   return (
     <div className="flex min-h-dvh">
-      <MainSidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+      <MainSidebar />
       <div className="flex-1 flex flex-col items-center justify-center bg-background text-foreground p-4 sm:p-6">
         <header className="w-full flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" className="md:hidden" onClick={toggleSidebar}>
-              <Icons.Menu className="h-6 w-6" />
-            </Button>
             <Icons.BookOpen className="h-6 w-6 text-primary" />
             <h1 className="text-lg sm:text-xl font-bold text-foreground">
               Tutorial
