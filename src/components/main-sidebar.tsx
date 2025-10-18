@@ -198,7 +198,7 @@ export function MainSidebar({ isOpen, toggleSidebar }: MainSidebarProps) {
                             ? 'bg-primary text-primary-foreground'
                             : 'hover:bg-muted'
                         }`}
-                        onClick={toggleSidebar} // Cierra la sidebar al hacer clic en un enlace
+                        onClick={toggleSidebar}
                       >
                         <subItem.icon className="h-4 w-4" />
                         <span>{subItem.label}</span>
@@ -220,7 +220,7 @@ export function MainSidebar({ isOpen, toggleSidebar }: MainSidebarProps) {
                       ? 'bg-primary text-primary-foreground'
                       : 'hover:bg-muted'
                   }`}
-                  onClick={toggleSidebar} // Cierra la sidebar al hacer clic en un enlace
+                  onClick={toggleSidebar}
                 >
                   <item.icon className="h-5 w-5" />
                   <span>{item.label}</span>
