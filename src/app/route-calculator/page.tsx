@@ -11,18 +11,13 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Icons } from '@/components/icons';
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from '@/components/ui/sidebar';
 import { SettingsSheet } from '../components/settings-sheet';
 import { PremiumPlaceholder } from '../components/premium-placeholder';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { MainSidebar } from '@/components/main-sidebar';
+import { MainSidebar } from '@/components/ui/sidebar';
 import { Trash2, Navigation } from 'lucide-react';
 
 type RouteSegment = {
@@ -199,143 +194,137 @@ export default function RouteCalculatorPage() {
   };
 
   return (
-    <SidebarProvider>
+    <div className="flex min-h-dvh">
       <MainSidebar />
-      <SidebarInset>
-        <div className="flex flex-col min-h-dvh bg-background text-foreground relative p-4 sm:p-6">
-          <header className="w-full flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <SidebarTrigger className="md:hidden">
-                <Icons.Menu />
-              </SidebarTrigger>
-              <Icons.Calculator className="h-6 w-6 text-primary" />
-              <h1 className="text-lg sm:text-xl font-bold text-foreground">
-                Calculadora de Ruta
-              </h1>
-            </div>
-            <SettingsSheet />
-          </header>
-          <main className="w-full flex-1 flex flex-col items-center">
-            <PremiumPlaceholder
-              title="Calculadora de Ruta para Camión"
-              description="Estima la distancia y el tiempo de tu viaje a una velocidad media de 70 km/h."
-            >
-              <div className='w-full max-w-2xl mx-auto space-y-6'>
-                {result && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Resultado Total de la Ruta</CardTitle>
-                            <CardDescription>
-                               Resumen completo de todos los tramos introducidos.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="grid grid-cols-2 gap-4 text-center">
-                           <div className="flex flex-col items-center justify-center p-4 bg-muted/50 rounded-lg">
-                                <Icons.Milestone className="h-8 w-8 text-primary mb-2" />
-                                <p className="text-sm text-muted-foreground">Distancia Total</p>
-                                <p className="text-2xl font-bold">{result.totalDistance}</p>
-                           </div>
-                            <div className="flex flex-col items-center justify-center p-4 bg-muted/50 rounded-lg">
-                                <Icons.Timer className="h-8 w-8 text-primary mb-2" />
-                                <p className="text-sm text-muted-foreground">Tiempo Total Estimado</p>
-                                <p className="text-2xl font-bold">{result.totalDuration}</p>
-                           </div>
-                        </CardContent>
-                    </Card>
-                 )}
-
+      <div className="flex-1 flex flex-col bg-background text-foreground p-4 sm:p-6">
+        <header className="w-full flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <Icons.Calculator className="h-6 w-6 text-primary" />
+            <h1 className="text-lg sm:text-xl font-bold text-foreground">
+              Calculadora de Ruta
+            </h1>
+          </div>
+          <SettingsSheet />
+        </header>
+        <main className="w-full flex-1 flex flex-col items-center">
+          <PremiumPlaceholder
+            title="Calculadora de Ruta para Camión"
+            description="Estima la distancia y el tiempo de tu viaje a una velocidad media de 70 km/h."
+          >
+            <div className='w-full max-w-2xl mx-auto space-y-6'>
+              {result && (
                 <Card>
-                    <CardHeader>
-                        <CardTitle>Calcular Ruta por Tramos</CardTitle>
-                        <CardDescription>Introduce los tramos de tu ruta. Se calculará la distancia y tiempo para cada uno y se mostrará el total.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {segments.map((segment, index) => (
-                        <div key={segment.id} className="p-4 border rounded-lg space-y-4 relative bg-muted/50">
-                          <Label className='font-semibold'>Tramo {index + 1}</Label>
-                          <div className="grid sm:grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                  <Label htmlFor={`origin-${segment.id}`}>Origen</Label>
-                                  <div className="flex gap-2">
-                                    <Input 
-                                      id={`origin-${segment.id}`} 
-                                      placeholder="Ej: Barcelona, España" 
-                                      value={segment.origin} 
-                                      onChange={(e) => handleSegmentChange(segment.id, 'origin', e.target.value)}
-                                      disabled={isLoading}
-                                      className="flex-1"
-                                    />
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="icon"
-                                      onClick={() => handleUseCurrentLocation(segment.id)}
-                                      disabled={isLoading || isGettingLocation}
-                                      title="Usar mi ubicación actual"
-                                    >
-                                      {isGettingLocation ? (
-                                        <Icons.Spinner className="h-4 w-4 animate-spin" />
-                                      ) : (
-                                        <Navigation className="h-4 w-4" />
-                                      )}
-                                    </Button>
-                                  </div>
-                              </div>
-                              <div className="space-y-2">
-                                  <Label htmlFor={`destination-${segment.id}`}>Destino</Label>
-                                  <Input 
-                                    id={`destination-${segment.id}`} 
-                                    placeholder="Ej: Lyon, Francia" 
-                                    value={segment.destination} 
-                                    onChange={(e) => handleSegmentChange(segment.id, 'destination', e.target.value)}
-                                    disabled={isLoading}
-                                  />
-                              </div>
-                          </div>
-                          {segments.length > 1 && (
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className='absolute top-2 right-2 h-7 w-7' 
-                              onClick={() => removeSegment(segment.id)}
-                              disabled={isLoading}
-                            >
-                               <Trash2 className="h-4 w-4 text-destructive" />
-                               <span className="sr-only">Eliminar tramo</span>
-                            </Button>
-                          )}
-                        </div>
-                      ))}
-                      <div className='flex justify-start'>
-                         <Button 
-                           variant="outline" 
-                           onClick={addSegment} 
-                           disabled={segments.length >= 6 || isLoading}
-                         >
-                           <Icons.Play className="mr-2 rotate-90" /> Añadir Tramo
-                         </Button>
-                      </div>
-                    </CardContent>
-                    <CardFooter>
-                        <Button onClick={handleCalculate} disabled={isLoading} className="w-full">
-                            {isLoading ? <Icons.Spinner className="mr-2 animate-spin" /> : <Icons.Calculator className="mr-2" />}
-                            {isLoading ? 'Calculando...' : 'Calcular Ruta Completa'}
-                        </Button>
-                    </CardFooter>
+                  <CardHeader>
+                    <CardTitle>Resultado Total de la Ruta</CardTitle>
+                    <CardDescription>
+                      Resumen completo de todos los tramos introducidos.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="grid grid-cols-2 gap-4 text-center">
+                    <div className="flex flex-col items-center justify-center p-4 bg-muted/50 rounded-lg">
+                      <Icons.Milestone className="h-8 w-8 text-primary mb-2" />
+                      <p className="text-sm text-muted-foreground">Distancia Total</p>
+                      <p className="text-2xl font-bold">{result.totalDistance}</p>
+                    </div>
+                    <div className="flex flex-col items-center justify-center p-4 bg-muted/50 rounded-lg">
+                      <Icons.Timer className="h-8 w-8 text-primary mb-2" />
+                      <p className="text-sm text-muted-foreground">Tiempo Total Estimado</p>
+                      <p className="text-2xl font-bold">{result.totalDuration}</p>
+                    </div>
+                  </CardContent>
                 </Card>
+              )}
 
-                {error && (
-                    <Alert variant="destructive">
-                        <AlertTitle>Error</AlertTitle>
-                        <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                )}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Calcular Ruta por Tramos</CardTitle>
+                  <CardDescription>Introduce los tramos de tu ruta. Se calculará la distancia y tiempo para cada uno y se mostrará el total.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {segments.map((segment, index) => (
+                    <div key={segment.id} className="p-4 border rounded-lg space-y-4 relative bg-muted/50">
+                      <Label className='font-semibold'>Tramo {index + 1}</Label>
+                      <div className="grid sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor={`origin-${segment.id}`}>Origen</Label>
+                          <div className="flex gap-2">
+                            <Input 
+                              id={`origin-${segment.id}`} 
+                              placeholder="Ej: Barcelona, España" 
+                              value={segment.origin} 
+                              onChange={(e) => handleSegmentChange(segment.id, 'origin', e.target.value)}
+                              disabled={isLoading}
+                              className="flex-1"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleUseCurrentLocation(segment.id)}
+                              disabled={isLoading || isGettingLocation}
+                              title="Usar mi ubicación actual"
+                            >
+                              {isGettingLocation ? (
+                                <Icons.Spinner className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Navigation className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor={`destination-${segment.id}`}>Destino</Label>
+                          <Input 
+                            id={`destination-${segment.id}`} 
+                            placeholder="Ej: Lyon, Francia" 
+                            value={segment.destination} 
+                            onChange={(e) => handleSegmentChange(segment.id, 'destination', e.target.value)}
+                            disabled={isLoading}
+                          />
+                        </div>
+                      </div>
+                      {segments.length > 1 && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className='absolute top-2 right-2 h-7 w-7' 
+                          onClick={() => removeSegment(segment.id)}
+                          disabled={isLoading}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                          <span className="sr-only">Eliminar tramo</span>
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  <div className='flex justify-start'>
+                    <Button 
+                      variant="outline" 
+                      onClick={addSegment} 
+                      disabled={segments.length >= 6 || isLoading}
+                    >
+                      <Icons.Play className="mr-2 rotate-90" /> Añadir Tramo
+                    </Button>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button onClick={handleCalculate} disabled={isLoading} className="w-full">
+                    {isLoading ? <Icons.Spinner className="mr-2 animate-spin" /> : <Icons.Calculator className="mr-2" />}
+                    {isLoading ? 'Calculando...' : 'Calcular Ruta Completa'}
+                  </Button>
+                </CardFooter>
+              </Card>
 
-              </div>
-            </PremiumPlaceholder>
-          </main>
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+              {error && (
+                <Alert variant="destructive">
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+            </div>
+          </PremiumPlaceholder>
+        </main>
+      </div>
+    </div>
   );
 }
