@@ -166,7 +166,8 @@ export function MainSidebar() {
   };
 
   const menuContent = (
-    <SidebarMenu>
+    <SidebarMenu asChild>
+      <div>
       {menuStructure.map((item) => {
         // Si tiene items, es un grupo collapsible
         if ('items' in item && Array.isArray(item.items)) {
@@ -230,6 +231,7 @@ export function MainSidebar() {
         
         return null;
       })}
+      </div>
     </SidebarMenu>
   );
 
