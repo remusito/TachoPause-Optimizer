@@ -3,14 +3,8 @@
 import {
   Sidebar,
   SidebarContent,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarFooter,
   SidebarSeparator,
-  SidebarMenuSub,
-  SidebarMenuSubItem,
-  SidebarMenuSubButton,
 } from '@/components/ui/sidebar';
 import { Icons } from '@/components/icons';
 import { useAuth } from '@/firebase';
@@ -38,7 +32,6 @@ import {
 } from "@/components/ui/collapsible";
 import { ChevronDown } from 'lucide-react';
 
-// Estructura del menú con grupos y submenús
 const menuStructure = [
   { 
     href: '/', 
@@ -165,76 +158,6 @@ export function MainSidebar() {
     );
   };
 
-  const menuContent = (
-    <SidebarMenu asChild>
-      <div>
-      {menuStructure.map((item) => {
-        // Si tiene items, es un grupo collapsible
-        if ('items' in item && Array.isArray(item.items)) {
-          const isOpen = openGroups.includes(item.label);
-          const hasActiveChild = item.items.some(child => pathname === child.href);
-          
-          return (
-            <Collapsible
-              key={item.label}
-              open={isOpen || hasActiveChild}
-              onOpenChange={() => toggleGroup(item.label)}
-            >
-              <SidebarMenuItem>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton>
-                    <item.icon />
-                    <span>{item.label}</span>
-                    <ChevronDown className={`ml-auto transition-transform ${isOpen || hasActiveChild ? 'rotate-180' : ''}`} />
-                  </SidebarMenuButton>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <SidebarMenuSub>
-                    {item.items.map((subItem) => (
-                      <SidebarMenuSubItem key={subItem.href}>
-                        <SidebarMenuSubButton
-                          asChild
-                          isActive={pathname === subItem.href}
-                        >
-                          <Link href={subItem.href}>
-                            <subItem.icon />
-                            <span>{subItem.label}</span>
-                            {(subItem.premium && !isPremium) && <Icons.Premium className="ml-auto" />}
-                          </Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    ))}
-                  </SidebarMenuSub>
-                </CollapsibleContent>
-              </SidebarMenuItem>
-            </Collapsible>
-          );
-        }
-        
-        // Si no tiene items, es un link simple
-        if ('href' in item && item.href) {
-          return (
-            <SidebarMenuItem key={item.href}>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname === item.href}
-              >
-                <Link href={item.href}>
-                  <item.icon />
-                  <span>{item.label}</span>
-                  {(item.premium && !isPremium) && <Icons.Premium className="ml-auto" />}
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          );
-        }
-        
-        return null;
-      })}
-      </div>
-    </SidebarMenu>
-  );
-
   return (
     <Sidebar>
       <div className="flex items-center gap-2 p-4 border-b">
@@ -244,7 +167,67 @@ export function MainSidebar() {
         </h1>
       </div>
       <SidebarContent asChild>
-        {menuContent}
+        <nav className="flex flex-col gap-2 p-4">
+          {menuStructure.map((item) => {
+            if ('items' in item && Array.isArray(item.items)) {
+              const isOpen = openGroups.includes(item.label);
+              const hasActiveChild = item.items.some(child => pathname === child.href);
+              
+              return (
+                <Collapsible
+                  key={item.label}
+                  open={isOpen || hasActiveChild}
+                  onOpenChange={() => toggleGroup(item.label)}
+                >
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" className="w-full justify-start gap-2">
+                      <item.icon className="h-5 w-5" />
+                      <span>{item.label}</span>
+                      <ChevronDown className={`ml-auto h-4 w-4 transition-transform ${isOpen || hasActiveChild ? 'rotate-180' : ''}`} />
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pl-4 space-y-1">
+                    {item.items.map((subItem) => (
+                      <Link
+                        key={subItem.href}
+                        href={subItem.href}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm ${
+                          pathname === subItem.href
+                            ? 'bg-primary text-primary-foreground'
+                            : 'hover:bg-muted'
+                        }`}
+                      >
+                        <subItem.icon className="h-4 w-4" />
+                        <span>{subItem.label}</span>
+                        {(subItem.premium && !isPremium) && <Icons.Premium className="ml-auto h-4 w-4" />}
+                      </Link>
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
+              );
+            }
+            
+            if ('href' in item && item.href) {
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm ${
+                    pathname === item.href
+                      ? 'bg-primary text-primary-foreground'
+                      : 'hover:bg-muted'
+                  }`}
+                >
+                  <item.icon className="h-5 w-5" />
+                  <span>{item.label}</span>
+                  {(item.premium && !isPremium) && <Icons.Premium className="ml-auto h-4 w-4" />}
+                </Link>
+              );
+            }
+            
+            return null;
+          })}
+        </nav>
       </SidebarContent>
       <SidebarFooter>
         <SidebarSeparator />
