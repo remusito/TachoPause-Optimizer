@@ -96,8 +96,8 @@ export default function TelephonesPage() {
                       <p className="text-sm text-primary font-mono">{contact.extension}</p>
                     </div>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => handleCall(contact.extension)}>
-                    <Icons.Phone className="mr-2" />
+                  <Button variant="outline" size="sm" onClick={() => handleCall(contact.extension)} className="min-w-[100px]">
+                    <Icons.Phone className="mr-2 h-4 w-4" />
                     Llamar
                   </Button>
                 </div>
