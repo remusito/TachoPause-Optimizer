@@ -85,7 +85,12 @@ const menuStructure = [
   },
 ];
 
-export function MainSidebar() {
+interface MainSidebarProps {
+  isOpen: boolean;
+  toggleSidebar: () => void;
+}
+
+export function MainSidebar({ isOpen, toggleSidebar }: MainSidebarProps) {
   const { isPremium } = usePremium();
   const { user, loading, signOut } = useAuth();
   const pathname = usePathname();
@@ -153,12 +158,15 @@ export function MainSidebar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 h-full w-64 bg-background border-r flex flex-col">
+    <nav className={`fixed top-0 left-0 h-full w-64 bg-background border-r flex flex-col transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 z-50`}>
       <div className="flex items-center gap-2 p-4 border-b">
         <Icons.Truck className="h-6 w-6 text-primary" />
         <h1 className="text-lg sm:text-xl font-bold text-foreground">
           TachoPause {isPremium ? <span className='text-primary'>Premium</span> : <span className='text-sm font-normal'>Optimizer</span>}
         </h1>
+        <Button variant="ghost" className="ml-auto md:hidden" onClick={toggleSidebar}>
+          <Icons.Close className="h-5 w-5" />
+        </Button>
       </div>
       <div className="flex-1 overflow-auto">
         <div className="flex flex-col gap-2 p-4">
@@ -190,6 +198,7 @@ export function MainSidebar() {
                             ? 'bg-primary text-primary-foreground'
                             : 'hover:bg-muted'
                         }`}
+                        onClick={toggleSidebar} // Cierra la sidebar al hacer clic en un enlace
                       >
                         <subItem.icon className="h-4 w-4" />
                         <span>{subItem.label}</span>
@@ -211,6 +220,7 @@ export function MainSidebar() {
                       ? 'bg-primary text-primary-foreground'
                       : 'hover:bg-muted'
                   }`}
+                  onClick={toggleSidebar} // Cierra la sidebar al hacer clic en un enlace
                 >
                   <item.icon className="h-5 w-5" />
                   <span>{item.label}</span>
