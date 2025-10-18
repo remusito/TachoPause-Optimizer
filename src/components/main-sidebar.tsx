@@ -1,8 +1,5 @@
 'use client';
 
-import {
-  Sidebar,
-} from '@/components/ui/sidebar';
 import { Icons } from '@/components/icons';
 import { useAuth } from '@/firebase';
 import { usePremium } from '@/hooks/use-premium';
@@ -13,13 +10,13 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { LogOut } from 'lucide-react';
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import {
@@ -110,42 +107,42 @@ export function MainSidebar() {
     if (user) {
       return (
         <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center justify-start gap-2 w-full p-2 h-auto">
-                    <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
-                        <AvatarFallback>{user.displayName?.charAt(0) || user.email?.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col items-start truncate">
-                        <span className="font-medium text-sm truncate">{user.displayName || user.email}</span>
-                        {user.displayName && <span className="text-xs text-muted-foreground truncate">{user.email}</span>}
-                    </div>
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                    <p className="text-sm font-medium leading-none truncate">{user.displayName || user.email}</p>
-                    {user.displayName && <p className="text-xs leading-none text-muted-foreground truncate">{user.email}</p>}
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem 
-                  onClick={async (e) => {
-                    e.preventDefault();
-                    try {
-                      await signOut();
-                      router.push('/login');
-                    } catch (error) {
-                      console.error('Error al cerrar sesión:', error);
-                    }
-                  }}
-                  className="cursor-pointer"
-                >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Cerrar Sesión</span>
-                </DropdownMenuItem>
-            </DropdownMenuContent>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="flex items-center justify-start gap-2 w-full p-2 h-auto">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
+                <AvatarFallback>{user.displayName?.charAt(0) || user.email?.charAt(0)}</AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col items-start truncate">
+                <span className="font-medium text-sm truncate">{user.displayName || user.email}</span>
+                {user.displayName && <span className="text-xs text-muted-foreground truncate">{user.email}</span>}
+              </div>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56" align="end" forceMount>
+            <DropdownMenuLabel className="font-normal">
+              <p className="text-sm font-medium leading-none truncate">{user.displayName || user.email}</p>
+              {user.displayName && <p className="text-xs leading-none text-muted-foreground truncate">{user.email}</p>}
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem 
+              onClick={async (e) => {
+                e.preventDefault();
+                try {
+                  await signOut();
+                  router.push('/login');
+                } catch (error) {
+                  console.error('Error al cerrar sesión:', error);
+                }
+              }}
+              className="cursor-pointer"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Cerrar Sesión</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
         </DropdownMenu>
-      )
+      );
     }
     return (
       <Button className="w-full" onClick={() => router.push('/login')}>
@@ -156,7 +153,7 @@ export function MainSidebar() {
   };
 
   return (
-    <Sidebar>
+    <nav className="fixed top-0 left-0 h-full w-64 bg-background border-r flex flex-col">
       <div className="flex items-center gap-2 p-4 border-b">
         <Icons.Truck className="h-6 w-6 text-primary" />
         <h1 className="text-lg sm:text-xl font-bold text-foreground">
@@ -164,7 +161,7 @@ export function MainSidebar() {
         </h1>
       </div>
       <div className="flex-1 overflow-auto">
-        <nav className="flex flex-col gap-2 p-4">
+        <div className="flex flex-col gap-2 p-4">
           {menuStructure.map((item) => {
             if ('items' in item && Array.isArray(item.items)) {
               const isOpen = openGroups.includes(item.label);
@@ -224,11 +221,11 @@ export function MainSidebar() {
             
             return null;
           })}
-        </nav>
+        </div>
       </div>
       <div className="border-t mt-auto p-2">
         <AuthButton />
       </div>
-    </Sidebar>
+    </nav>
   );
 }
