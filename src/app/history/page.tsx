@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import {
   Card,
   CardContent,
@@ -10,135 +10,102 @@ import {
 } from '@/components/ui/card';
 import { Icons } from '@/components/icons';
 import { SettingsSheet } from '../components/settings-sheet';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { MainSidebar } from '@/components/ui/sidebar';
-import { useAuth } from '@/firebase';
-import { useCollection } from '@/hooks/use-collection';
-import { collection, orderBy, query, limit } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
-import { formatDistanceToNow } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { Button } from '@/components/ui/button';
+import { PremiumPlaceholder } from '../components/premium-placeholder';
 
-interface HistoryItem {
-    id: string;
-    timestamp: { toDate: () => Date };
-    type: 'conduccion' | 'pausa';
-    duration: number;
-    distance?: number;
-    status: 'completado' | 'interrumpido';
-}
+// Datos de la captura
+const telephoneData = [
+  { name: 'MANOLO', extension: '2001' },
+  { name: 'SAMUEL', extension: '2002' },
+  { name: 'ORTEGA', extension: '2003' },
+  { name: 'DELMI', extension: '2004' },
+  { name: 'KRISTIAN', extension: '2005' },
+  { name: 'IVAN', extension: '2006' },
+  { name: 'ALONSO', extension: '2007' },
+  { name: 'BENJA', extension: '2008' },
+  { name: 'CARLOS', extension: '2009' },
+  { name: 'TOMA', extension: '2010' },
+  { name: 'MANOLIN', extension: '2011' },
+  { name: 'VICTOR GARCIA', extension: '2012' },
+  { name: 'JOAN', extension: '2013' },
+  { name: 'LAGARDERA', extension: '2014' },
+  { name: 'XAVI OFICINA', extension: '2015' },
+  { name: 'V. VALLS', extension: '2016' },
+  { name: 'WOJCIECH', extension: '2017' },
+  { name: 'KRISTIAN TODOROV', extension: '2018' },
+  { name: 'SERGIO', extension: '2019' },
+  { name: 'RUBEN', extension: '2020' },
+  { name: 'JULIAN', extension: '2021' },
+  { name: 'KIKE', extension: '2022' },
+  { name: 'RAFA JR', extension: '2023' },
+  { name: 'PEPE', extension: '2024' },
+  { name: 'NEDI', extension: '2025' },
+  { name: 'MANOL', extension: '2026' },
+  { name: 'RAUL', extension: '2027' },
+  { name: 'ANGEL', extension: '2028' },
+  { name: 'DAVID', extension: '2029' },
+  { name: 'JAVI BRU', extension: '2030' },
+  { name: 'IVAN SERQUERA', extension: '2031' },
+  { name: 'PABLO', extension: '2032' },
+  { name: 'INMA', extension: '2033' },
+  { name: 'MASCLE', extension: '2034' },
+  { name: 'JORDI', extension: '2035' },
+  { name: 'YUBERO', extension: '2036' },
+  { name: 'FERRAN', extension: '2037' },
+  { name: 'VLADIMIR', extension: '2038' },
+  { name: 'CRISTIAN', extension: '2039' },
+  { name: 'JAVIER GARCIA', extension: '2040' },
+];
 
-const formatDuration = (seconds: number) => {
-    if (seconds < 60) return `${seconds}s`;
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    if (minutes < 60) {
-        return `${minutes}m ${remainingSeconds}s`;
-    }
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    return `${hours}h ${remainingMinutes}m`;
-}
-
-export default function HistoryPage() {
-  const { user } = useAuth();
-  const db = useFirestore();
-
-  const historyQuery = useMemo(() => {
-    if (!user || !db) return null;
-    return query(
-        collection(db, `users/${user.uid}/history`), 
-        orderBy('timestamp', 'desc'),
-        limit(50)
-    );
-  }, [user, db]);
-
-  const { data: historyData, loading, error } = useCollection<HistoryItem>(historyQuery);
+export default function TelephonesPage() {
+  const handleCall = (extension: string) => {
+    window.location.href = `tel:${extension}`;
+  };
 
   return (
-    <div className="flex min-h-dvh">
-      <MainSidebar />
-      <div className="flex-1 flex flex-col bg-background text-foreground p-4 sm:p-6">
-        <header className="w-full flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <Icons.History className="h-6 w-6 text-primary" />
-            <h1 className="text-lg sm:text-xl font-bold text-foreground">
-              Historial de Actividad
-            </h1>
-          </div>
-          <SettingsSheet />
-        </header>
-        <main className="w-full flex-1 flex flex-col items-center">
-          <Card className="w-full max-w-4xl">
+    <div className="flex flex-col min-h-dvh bg-background text-foreground">
+      <header className="w-full p-4 border-b flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Icons.Phone className="h-6 w-6 text-primary" />
+          <h1 className="text-lg sm:text-xl font-bold text-foreground">
+            Teléfonos de Contacto
+          </h1>
+        </div>
+        <SettingsSheet />
+      </header>
+      <main className="flex-1 flex flex-col items-center w-full p-4 sm:p-6 gap-6">
+        <PremiumPlaceholder
+          title="Directorio Telefónico Premium"
+          description="Accede a la lista de contactos de la empresa directamente desde la app."
+        >
+          <Card className="w-full max-w-md">
             <CardHeader>
-              <CardTitle>Registros de actividad</CardTitle>
-              <CardDescription>Aquí puedes ver tus ciclos de conducción y pausas guardados.</CardDescription>
+              <CardTitle className="text-lg sm:text-xl">Directorio Telefónico</CardTitle>
+              <CardDescription>Lista de extensiones importantes de la empresa.</CardDescription>
             </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Hace</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Duración</TableHead>
-                    <TableHead>Distancia</TableHead>
-                    <TableHead>Estado</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading && (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center">
-                        <Icons.Spinner className="animate-spin h-6 w-6 mx-auto my-8"/>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {!loading && !user && (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                        Inicia sesión para ver tu historial.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {!loading && user && historyData.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                        Aún no tienes actividad registrada.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {error && (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center text-destructive py-8">
-                        Error al cargar el historial: {error.message}
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {historyData.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell>{formatDistanceToNow(item.timestamp.toDate(), { addSuffix: true, locale: es })}</TableCell>
-                      <TableCell>
-                        <Badge variant={item.type === 'conduccion' ? 'default' : 'secondary'}>
-                          {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{formatDuration(item.duration)}</TableCell>
-                      <TableCell>{item.distance ? `${item.distance.toFixed(2)} km` : '-'}</TableCell>
-                      <TableCell>
-                        <span className={`flex items-center gap-2 ${item.status === 'interrumpido' ? 'text-yellow-500' : 'text-green-500'}`}>
-                          <span className={`h-2 w-2 rounded-full ${item.status === 'interrumpido' ? 'bg-yellow-500' : 'bg-green-500'}`}></span>
-                          {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <CardContent className="space-y-2">
+              {telephoneData.map((contact, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 rounded-lg border bg-muted/50"
+                >
+                  <div className="flex items-center gap-4">
+                    <Icons.Phone className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="font-semibold">{contact.name}</p>
+                      <p className="text-sm text-primary font-mono">{contact.extension}</p>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => handleCall(contact.extension)}>
+                    <Icons.Phone className="mr-2" />
+                    Llamar
+                  </Button>
+                </div>
+              ))}
             </CardContent>
           </Card>
-        </main>
-      </div>
+        </PremiumPlaceholder>
+      </main>
     </div>
   );
 }
