@@ -16,7 +16,7 @@ import {
 import { SettingsSheet } from '../components/settings-sheet';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { MainSidebar } from '../components/main-sidebar';
+import { MainSidebar } from '@/components/main-sidebar';
 import React, { useMemo } from 'react';
 import { useAchievements } from '@/hooks/use-achievements-provider';
 import { allAchievements, type Achievement } from '@/lib/achievements';
