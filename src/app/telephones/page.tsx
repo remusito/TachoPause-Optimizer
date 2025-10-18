@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/card';
 import { Icons } from '@/components/icons';
 import { SettingsSheet } from '../components/settings-sheet';
-import { MainSidebar } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { PremiumPlaceholder } from '../components/premium-placeholder';
 
@@ -64,52 +63,49 @@ export default function TelephonesPage() {
   };
 
   return (
-    <div className="flex min-h-dvh">
-      <MainSidebar />
-      <div className="flex-1 flex flex-col bg-background text-foreground p-4 sm:p-6">
-        <header className="w-full flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <Icons.Phone className="h-6 w-6 text-primary" />
-            <h1 className="text-lg sm:text-xl font-bold text-foreground">
-              Teléfonos de Contacto
-            </h1>
-          </div>
-          <SettingsSheet />
-        </header>
-        <main className="w-full flex-1 flex flex-col items-center">
-          <PremiumPlaceholder
-            title="Directorio Telefónico Premium"
-            description="Accede a la lista de contactos de la empresa directamente desde la app."
-          >
-            <Card className="w-full max-w-2xl">
-              <CardHeader>
-                <CardTitle>Directorio Telefónico</CardTitle>
-                <CardDescription>Lista de extensiones importantes de la empresa.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {telephoneData.map((contact, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-3 rounded-lg border bg-muted/50"
-                  >
-                    <div className="flex items-center gap-4">
-                      <Icons.Phone className="h-5 w-5 text-muted-foreground"/>
-                      <div>
-                        <p className="font-semibold">{contact.name}</p>
-                        <p className="text-sm text-primary font-mono">{contact.extension}</p>
-                      </div>
+    <div className="flex flex-col min-h-dvh bg-background text-foreground">
+      <header className="w-full p-4 border-b flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Icons.Phone className="h-6 w-6 text-primary" />
+          <h1 className="text-lg sm:text-xl font-bold text-foreground">
+            Teléfonos de Contacto
+          </h1>
+        </div>
+        <SettingsSheet />
+      </header>
+      <main className="flex-1 flex flex-col items-center justify-center w-full p-4 sm:p-6 gap-6">
+        <PremiumPlaceholder
+          title="Directorio Telefónico Premium"
+          description="Accede a la lista de contactos de la empresa directamente desde la app."
+        >
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle className="text-lg sm:text-xl">Directorio Telefónico</CardTitle>
+              <CardDescription>Lista de extensiones importantes de la empresa.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {telephoneData.map((contact, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 rounded-lg border bg-muted/50"
+                >
+                  <div className="flex items-center gap-3">
+                    <Icons.Phone className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="font-semibold text-base">{contact.name}</p>
+                      <p className="text-sm text-primary font-mono">{contact.extension}</p>
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => handleCall(contact.extension)}>
-                      <Icons.Phone className="mr-2" />
-                      Llamar
-                    </Button>
                   </div>
-                ))}
-              </CardContent>
-            </Card>
-          </PremiumPlaceholder>
-        </main>
-      </div>
+                  <Button variant="outline" size="sm" onClick={() => handleCall(contact.extension)} className="w-full sm:w-auto">
+                    <Icons.Phone className="mr-2 h-4 w-4" />
+                    Llamar
+                  </Button>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </PremiumPlaceholder>
+      </main>
     </div>
   );
 }
