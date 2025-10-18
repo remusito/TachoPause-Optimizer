@@ -1,7 +1,14 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Icons } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
@@ -12,18 +19,25 @@ import { useAchievements } from '@/hooks/use-achievements-provider';
 import { addHistoryItem } from '@/lib/data';
 import { useAuth, useFirestore } from '@/firebase';
 
-// Helper: calcula distancia entre dos puntos lat/lon en metros
-function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371e3;
+// Helper to calculate distance between two lat/lon points in meters (Haversine formula)
+function calculateDistance(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number {
+  const R = 6371e3; // metres
   const φ1 = (lat1 * Math.PI) / 180;
   const φ2 = (lat2 * Math.PI) / 180;
   const Δφ = ((lat2 - lat1) * Math.PI) / 180;
   const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
   const a =
-    Math.sin(Δφ / 2) ** 2 +
-    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
+    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
+
+  return R * c; // in metres
 }
 
 const formatTime = (milliseconds: number) => {
@@ -43,6 +57,7 @@ export default function SpeedometerPage() {
   const [error, setError] = useState<string | null>(null);
   const watchIdRef = useRef<number | null>(null);
   const { toast } = useToast();
+
   const [maxSpeed, setMaxSpeed] = useState(0);
   const [averageSpeed, setAverageSpeed] = useState(0);
   const [distance, setDistance] = useState(0);
@@ -50,6 +65,7 @@ export default function SpeedometerPage() {
   const [startTime, setStartTime] = useState<number | null>(null);
   const lastPositionRef = useRef<GeolocationPosition | null>(null);
   const speedSamplesRef = useRef<number[]>([]);
+
   const { user } = useAuth();
   const db = useFirestore();
   const { updateAchievementProgress, incrementAchievementProgress } = useAchievements();
@@ -57,31 +73,31 @@ export default function SpeedometerPage() {
   const handleSuccess: PositionCallback = (position) => {
     const currentSpeed = position.coords.speed;
     const speedKmh = currentSpeed ? Math.round(currentSpeed * 3.6) : 0;
+    
     setSpeed(speedKmh);
     setError(null);
-
+    
     if (speedKmh > maxSpeed) {
       setMaxSpeed(speedKmh);
       updateAchievementProgress('speeder', speedKmh);
       updateAchievementProgress('supersonic', speedKmh);
     }
 
+    // Calculate distance
     if (lastPositionRef.current) {
-      const lastCoords = lastPositionRef.current.coords;
-      if (lastCoords) {
-        const newDistance = calculateDistance(
-          lastCoords.latitude,
-          lastCoords.longitude,
-          position.coords.latitude,
-          position.coords.longitude
-        );
-        const newTotalDistance = distance + newDistance;
-        setDistance(newTotalDistance);
-        updateAchievementProgress('marathoner', newTotalDistance / 1000);
-      }
+      const newDistance = calculateDistance(
+        lastPositionRef.current.coords.latitude,
+        lastPositionRef.current.coords.longitude,
+        position.coords.latitude,
+        position.coords.longitude
+      );
+      const newTotalDistance = distance + newDistance;
+      setDistance(newTotalDistance);
+      updateAchievementProgress('marathoner', newTotalDistance / 1000);
     }
     lastPositionRef.current = position;
 
+    // Calculate average speed
     if (speedKmh > 0) {
       speedSamplesRef.current.push(speedKmh);
       const totalSpeed = speedSamplesRef.current.reduce((sum, s) => sum + s, 0);
@@ -103,20 +119,24 @@ export default function SpeedometerPage() {
         break;
     }
     setError(errorMessage);
-    toast({ title: 'Error de GPS', description: errorMessage, variant: 'destructive' });
+    toast({
+      title: 'Error de GPS',
+      description: errorMessage,
+      variant: 'destructive',
+    });
     stopTracking(false);
   };
 
   const resetStats = () => {
-    setSpeed(0);
-    setMaxSpeed(0);
-    setAverageSpeed(0);
-    setDistance(0);
-    setElapsedTime(0);
-    setStartTime(null);
-    lastPositionRef.current = null;
-    speedSamplesRef.current = [];
-  };
+      setSpeed(0);
+      setMaxSpeed(0);
+      setAverageSpeed(0);
+      setDistance(0);
+      setElapsedTime(0);
+      setStartTime(null);
+      lastPositionRef.current = null;
+      speedSamplesRef.current = [];
+  }
 
   const startTracking = () => {
     if (!navigator.geolocation) {
@@ -128,46 +148,62 @@ export default function SpeedometerPage() {
       });
       return;
     }
+    
     resetStats();
     setIsTracking(true);
     setStartTime(Date.now());
-    toast({ title: 'GPS Activado', description: 'Iniciando seguimiento de velocidad y distancia.' });
-    watchIdRef.current = navigator.geolocation.watchPosition(handleSuccess, handleError, {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 0,
+    toast({
+      title: 'GPS Activado',
+      description: 'Iniciando seguimiento de velocidad y distancia.',
     });
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      handleSuccess,
+      handleError,
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
   };
 
   const stopTracking = (showToast = true) => {
     setIsTracking(false);
-    if (watchIdRef.current !== null) {
+    
+    if (watchIdRef.current) {
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
     }
-
+    
+    // Save the session to Firestore if the user is logged in and there's data
     if (user && db && distance > 0 && elapsedTime > 0) {
       addHistoryItem(db, user.uid, {
         type: 'conduccion',
         duration: Math.floor(elapsedTime / 1000),
-        distance: distance / 1000,
+        distance: distance / 1000, // convert meters to km
         status: 'completado',
+        // You could add avgSpeed and maxSpeed here if your data model supports it
       });
-      if (showToast) {
-        toast({
+       if (showToast) {
+         toast({
           title: 'Sesión Guardada',
           description: `Viaje de ${(distance / 1000).toFixed(2)} km guardado en tu historial.`,
         });
       }
     } else if (showToast) {
-      toast({ title: 'GPS Desactivado', description: 'Seguimiento detenido.', variant: 'destructive' });
+       toast({
+        title: 'GPS Desactivado',
+        description: 'Seguimiento detenido.',
+        variant: 'destructive',
+      });
     }
+
+    // Reset stats for the next session
     resetStats();
   };
 
   const handleToggleTracking = () => {
-    if (isTracking) stopTracking();
-    else startTracking();
+    if (isTracking) {
+      stopTracking();
+    } else {
+      startTracking();
+    }
   };
 
   useEffect(() => {
@@ -176,7 +212,7 @@ export default function SpeedometerPage() {
       timer = setInterval(() => {
         const elapsed = Date.now() - startTime;
         setElapsedTime(elapsed);
-        if (user) incrementAchievementProgress('explorer', 1);
+        if (user) incrementAchievementProgress('explorer', 1); // Increment by 1 second
       }, 1000);
     }
     return () => {
@@ -185,68 +221,107 @@ export default function SpeedometerPage() {
   }, [isTracking, startTime, incrementAchievementProgress, user]);
 
   useEffect(() => {
+    // Cleanup on component unmount
     return () => {
-      if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
+      if (watchIdRef.current) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+      }
     };
-  }, []);
-
-  // Solo mostrar sidebar en home
-  const [showSidebar, setShowSidebar] = useState(false);
-  useEffect(() => {
-    setShowSidebar(window.location.pathname === '/');
   }, []);
 
   return (
     <div className="flex min-h-dvh">
-      {showSidebar && <MainSidebar />}
-      <div className="flex-1 flex flex-col bg-background text-foreground p-4 sm:p-6">
-        <header className="w-full flex items-center justify-between mb-6">
+      <MainSidebar />
+      <div className="flex-1 flex flex-col items-center justify-center bg-background text-foreground relative">
+        <header className="absolute top-0 left-0 w-full p-4 sm:p-6 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Icons.Gauge className="h-6 w-6 text-primary" />
-            <h1 className="text-lg sm:text-xl font-bold">Velocímetro</h1>
+            <Icons.Speedometer className="h-6 w-6 text-primary" />
+            <h1 className="text-lg sm:text-xl font-bold text-foreground">
+              Velocímetro GPS
+            </h1>
           </div>
           <SettingsSheet />
         </header>
-
-        <main className="flex-1 w-full">
-          <Card className="mb-6 p-4 text-center">
-            {error && <p className="text-red-600">{error}</p>}
-            <h2 className="text-4xl font-bold">{speed} km/h</h2>
-            <Button onClick={handleToggleTracking} className="mt-4">
-              {isTracking ? 'Detener' : 'Iniciar'}
-            </Button>
-          </Card>
-
-          <Card className="mb-6">
+        <main className='flex flex-1 flex-col items-center justify-center w-full px-4 gap-4 pt-20 pb-16'>
+          <Card className="w-full max-w-sm text-center border-none shadow-2xl bg-card/80 backdrop-blur-sm dark:bg-card/50">
             <CardHeader>
-              <CardTitle>Resumen de la Sesión Actual</CardTitle>
+              <CardTitle className="text-2xl">Velocidad Actual</CardTitle>
+              {error && <CardDescription className="text-destructive">{error}</CardDescription>}
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-semibold">Vel. Máxima</h4>
-                  <p>{maxSpeed} km/h</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold">Vel. Media</h4>
-                  <p>{averageSpeed} km/h</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold">Distancia</h4>
-                  <p>{(distance / 1000).toFixed(2)} km</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold">Tiempo</h4>
-                  <p>{formatTime(elapsedTime)}</p>
+            <CardContent className="flex justify-center items-center py-4">
+              <div className="relative w-56 h-56">
+                <svg className="w-full h-full" viewBox="0 0 250 250">
+                  <circle cx="125" cy="125" r="100" className="stroke-border" strokeWidth="15" fill="transparent" />
+                  <circle
+                    cx="125"
+                    cy="125"
+                    r="100"
+                    className={cn( 'transition-all duration-300', isTracking ? 'stroke-primary' : 'stroke-muted' )}
+                    strokeWidth="15"
+                    fill="transparent"
+                    strokeDasharray="628.32"
+                    strokeDashoffset={628.32 - (speed / 150) * 628.32} // Max speed 150km/h
+                    strokeLinecap="round"
+                    transform="rotate(-90 125 125)"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-7xl font-bold font-headline tracking-tighter text-primary">
+                    {speed}
+                  </span>
+                  <span className="text-lg text-muted-foreground">km/h</span>
                 </div>
               </div>
             </CardContent>
+            <CardFooter className="flex flex-col gap-4">
+              <div className="flex gap-4 justify-center">
+                <Button
+                  size="lg"
+                  className="w-40"
+                  onClick={handleToggleTracking}
+                  variant={isTracking ? 'destructive' : 'default'}
+                >
+                  {isTracking ? <Icons.Pause className="mr-2" /> : <Icons.Play className="mr-2" />}
+                  {isTracking ? 'Detener' : 'Iniciar'}
+                </Button>
+              </div>
+              {!user && <p className="text-xs text-muted-foreground">Inicia sesión para guardar tus viajes</p>}
+            </CardFooter>
           </Card>
 
-          <p className="text-sm text-muted-foreground mt-4">
+          <Card className="w-full max-w-sm">
+            <CardHeader>
+              <CardTitle>Resumen de la Sesión Actual</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 grid grid-cols-2 gap-4 text-center">
+              <div className="flex flex-col items-center gap-1">
+                <Icons.Gauge className="h-6 w-6 text-primary"/>
+                <p className="text-xs text-muted-foreground">Vel. Máxima</p>
+                <p className="font-bold text-lg">{maxSpeed} <span className="text-sm font-normal">km/h</span></p>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <Icons.Gauge className="h-6 w-6 text-primary"/>
+                <p className="text-xs text-muted-foreground">Vel. Media</p>
+                <p className="font-bold text-lg">{averageSpeed} <span className="text-sm font-normal">km/h</span></p>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <Icons.Milestone className="h-6 w-6 text-primary"/>
+                <p className="text-xs text-muted-foreground">Distancia</p>
+                <p className="font-bold text-lg">{(distance / 1000).toFixed(2)} <span className="text-sm font-normal">km</span></p>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <Icons.Timer className="h-6 w-6 text-primary"/>
+                <p className="text-xs text-muted-foreground">Tiempo</p>
+                <p className="font-bold text-lg">{formatTime(elapsedTime)}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </main>
+        <footer className="w-full text-center p-4 absolute bottom-0">
+          <p className="text-xs text-muted-foreground">
             La precisión de la velocidad depende del GPS de tu dispositivo.
           </p>
-        </main>
+        </footer>
       </div>
     </div>
   );
