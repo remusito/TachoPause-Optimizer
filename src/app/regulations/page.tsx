@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Icons } from '@/components/icons';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { SettingsSheet } from '../components/settings-sheet';
-import { MainSidebar } from '../components/main-sidebar';
+import { MainSidebar } from '@/components/main-sidebar';
 import { FooterWithAd } from '../components/footer-with-ad';
 import { FileText, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
