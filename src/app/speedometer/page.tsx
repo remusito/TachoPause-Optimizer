@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/sidebar';
 import { SettingsSheet } from '../components/settings-sheet';
 import { cn } from '@/lib/utils';
-import { MainSidebar } from '../components/main-sidebar';
+import { MainSidebar } from '@/components/main-sidebar';
 import { useAchievements } from '@/hooks/use-achievements-provider';
 import { addHistoryItem } from '@/lib/data';
 import { useAuth, useFirestore } from '@/firebase';
