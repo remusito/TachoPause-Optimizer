@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -10,15 +9,10 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Icons } from '@/components/icons';
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from '@/components/ui/sidebar';
 import { SettingsSheet } from '../components/settings-sheet';
 import { BarChart as RechartsBarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
-import { MainSidebar } from '@/components/main-sidebar';
+import { MainSidebar } from '@/components/ui/sidebar';
 import { useAuth } from '@/firebase';
 import { useFirestore } from '@/hooks/use-firestore';
 import { useCollection } from '@/hooks/use-collection';
@@ -38,7 +32,6 @@ interface StatsSummary {
     totalDrivingTime: number;
     avgSpeed?: number;
 }
-
 
 export default function StatsPage() {
   const { user } = useAuth();
@@ -92,85 +85,79 @@ export default function StatsPage() {
     return summaryData?.totalDrivingTime ? summaryData.totalDrivingTime / 3600 : 0;
   }, [summaryData]);
 
-
   return (
-    <SidebarProvider>
+    <div className="flex min-h-dvh">
       <MainSidebar />
-      <SidebarInset>
-        <div className="flex flex-col min-h-dvh bg-background text-foreground relative p-4 sm:p-6">
-          <header className="w-full flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <SidebarTrigger className="md:hidden">
-                <Icons.Menu />
-              </SidebarTrigger>
-              <Icons.BarChart className="h-6 w-6 text-primary" />
-              <h1 className="text-lg sm:text-xl font-bold text-foreground">
-                Estadísticas
-              </h1>
+      <div className="flex-1 flex flex-col bg-background text-foreground p-4 sm:p-6">
+        <header className="w-full flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <Icons.BarChart className="h-6 w-6 text-primary" />
+            <h1 className="text-lg sm:text-xl font-bold text-foreground">
+              Estadísticas
+            </h1>
+          </div>
+          <SettingsSheet />
+        </header>
+        <main className="w-full flex-1 flex flex-col items-center">
+          {loading && <Icons.Spinner className="animate-spin h-10 w-10 text-primary my-16" />}
+          {!loading && !user && <p className="text-muted-foreground my-16">Inicia sesión para ver tus estadísticas.</p>}
+          {!loading && user && (
+            <div className="w-full max-w-4xl grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <Card className="lg:col-span-3">
+                <CardHeader>
+                  <CardTitle>Horas de Conducción vs. Pausa (Últimos 7 días)</CardTitle>
+                  <CardDescription>Resumen de tu actividad en la última semana, en horas.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer config={{
+                    conduccion: { label: 'Conducción', color: 'hsl(var(--primary))' },
+                    pausa: { label: 'Pausa', color: 'hsl(var(--secondary))' },
+                  }} className="min-h-64 w-full">
+                    <RechartsBarChart data={chartData} accessibilityLayer>
+                      <CartesianGrid vertical={false} />
+                      <XAxis dataKey="day" tickLine={false} tickMargin={10} axisLine={false} />
+                      <YAxis unit="h" />
+                      <Tooltip
+                        cursor={false}
+                        content={<ChartTooltipContent indicator="dot" />}
+                      />
+                      <Bar dataKey="conduccion" fill="var(--color-conduccion)" radius={4} />
+                      <Bar dataKey="pausa" fill="var(--color-pausa)" radius={4} />
+                    </RechartsBarChart>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><Icons.Milestone/> Distancia Total</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-4xl font-bold">{(summaryData?.totalDistance || 0).toLocaleString('es-ES', { maximumFractionDigits: 0 })} km</p>
+                  <p className="text-sm text-muted-foreground">Acumulado histórico</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><Icons.Gauge/> Velocidad Media</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-4xl font-bold">{(summaryData?.avgSpeed || 0).toFixed(0)} km/h</p>
+                  <p className="text-sm text-muted-foreground">Acumulado histórico</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><Icons.Timer/> Horas Conducidas</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-4xl font-bold">{totalDrivingHours.toFixed(1)} h</p>
+                  <p className="text-sm text-muted-foreground">Acumulado histórico</p>
+                </CardContent>
+              </Card>
             </div>
-            <SettingsSheet />
-          </header>
-          <main className="w-full flex-1 flex flex-col items-center">
-             {loading && <Icons.Spinner className="animate-spin h-10 w-10 text-primary my-16" />}
-             {!loading && !user && <p className="text-muted-foreground my-16">Inicia sesión para ver tus estadísticas.</p>}
-             {!loading && user && (
-                <div className="w-full max-w-4xl grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    <Card className="lg:col-span-3">
-                        <CardHeader>
-                            <CardTitle>Horas de Conducción vs. Pausa (Últimos 7 días)</CardTitle>
-                            <CardDescription>Resumen de tu actividad en la última semana, en horas.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <ChartContainer config={{
-                                conduccion: { label: 'Conducción', color: 'hsl(var(--primary))' },
-                                pausa: { label: 'Pausa', color: 'hsl(var(--secondary))' },
-                            }} className="min-h-64 w-full">
-                                <RechartsBarChart data={chartData} accessibilityLayer>
-                                    <CartesianGrid vertical={false} />
-                                    <XAxis dataKey="day" tickLine={false} tickMargin={10} axisLine={false} />
-                                    <YAxis unit="h" />
-                                     <Tooltip
-                                        cursor={false}
-                                        content={<ChartTooltipContent indicator="dot" />}
-                                    />
-                                    <Bar dataKey="conduccion" fill="var(--color-conduccion)" radius={4} />
-                                    <Bar dataKey="pausa" fill="var(--color-pausa)" radius={4} />
-                                </RechartsBarChart>
-                            </ChartContainer>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2"><Icons.Milestone/> Distancia Total</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-4xl font-bold">{(summaryData?.totalDistance || 0).toLocaleString('es-ES', { maximumFractionDigits: 0 })} km</p>
-                            <p className="text-sm text-muted-foreground">Acumulado histórico</p>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2"><Icons.Gauge/> Velocidad Media</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-4xl font-bold">{(summaryData?.avgSpeed || 0).toFixed(0)} km/h</p>
-                            <p className="text-sm text-muted-foreground">Acumulado histórico</p>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2"><Icons.Timer/> Horas Conducidas</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-4xl font-bold">{totalDrivingHours.toFixed(1)} h</p>
-                            <p className="text-sm text-muted-foreground">Acumulado histórico</p>
-                        </CardContent>
-                    </Card>
-                </div>
-            )}
-          </main>
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+          )}
+        </main>
+      </div>
+    </div>
   );
 }
