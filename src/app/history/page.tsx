@@ -18,7 +18,7 @@ import {
 import { SettingsSheet } from '../components/settings-sheet';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { MainSidebar } from '../components/main-sidebar';
+import { MainSidebar } from '@/components/main-sidebar';
 import { useAuth } from '@/firebase';
 import { useCollection } from '@/hooks/use-collection';
 import { collection, orderBy, query, limit } from 'firebase/firestore';
