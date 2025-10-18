@@ -9,7 +9,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { usePremium } from '@/hooks/use-premium';
-import { MainSidebar } from './components/main-sidebar';
+import { MainSidebar } from '@/components/main-sidebar';
 import { FooterWithAd } from './components/footer-with-ad';
 import { WelcomeOverlay } from './components/welcome-overlay';
 import { useEffect } from 'react';
