@@ -4,11 +4,10 @@ import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
-
 import { Button } from "@/components/ui/button"
 
 const sidebarVariants = cva(
-  "fixed top-0 left-0 h-full w-64 border-r border-background transition-transform duration-300 ease-in-out",
+  "fixed top-0 left-0 h-full w-64 border-r border-background transition-transform duration-300 ease-in-out z-40 md:relative md:z-auto",
   {
     variants: {
       variant: {
@@ -50,7 +49,7 @@ interface SidebarHeaderProps
   asChild?: boolean
 }
 
-const SidebarHeader = React.forwardRef<
+const SidebarHeader = React.forwardRef
   HTMLDivElement,
   SidebarHeaderProps
 >(({ className, asChild = false, ...props }, ref) => {
@@ -65,7 +64,7 @@ const SidebarHeader = React.forwardRef<
 })
 SidebarHeader.displayName = "SidebarHeader"
 
-const sidebarContentVariants = cva("flex flex-col gap-2 p-4")
+const sidebarContentVariants = cva("flex flex-col gap-2 p-4 overflow-y-auto flex-1")
 
 interface SidebarContentProps
   extends React.HTMLAttributes<HTMLDivElement>,
@@ -73,7 +72,7 @@ interface SidebarContentProps
   asChild?: boolean
 }
 
-const SidebarContent = React.forwardRef<
+const SidebarContent = React.forwardRef
   HTMLDivElement,
   SidebarContentProps
 >(({ className, asChild = false, ...props }, ref) => {
@@ -96,7 +95,7 @@ interface SidebarFooterProps
   asChild?: boolean
 }
 
-const SidebarFooter = React.forwardRef<
+const SidebarFooter = React.forwardRef
   HTMLDivElement,
   SidebarFooterProps
 >(({ className, asChild = false, ...props }, ref) => {
@@ -119,7 +118,7 @@ interface SidebarMenuProps
   asChild?: boolean
 }
 
-const SidebarMenu = React.forwardRef<
+const SidebarMenu = React.forwardRef
   HTMLDivElement,
   SidebarMenuProps
 >(({ className, asChild = false, ...props }, ref) => {
@@ -142,7 +141,7 @@ interface SidebarMenuItemProps
   asChild?: boolean
 }
 
-const SidebarMenuItem = React.forwardRef<
+const SidebarMenuItem = React.forwardRef
   HTMLDivElement,
   SidebarMenuItemProps
 >(({ className, asChild = false, ...props }, ref) => {
@@ -201,7 +200,7 @@ interface SidebarMenuSubProps
   asChild?: boolean
 }
 
-const SidebarMenuSub = React.forwardRef<
+const SidebarMenuSub = React.forwardRef
   HTMLDivElement,
   SidebarMenuSubProps
 >(({ className, asChild = false, ...props }, ref) => {
@@ -222,10 +221,10 @@ interface SidebarMenuSubItemProps
   extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof sidebarMenuSubItemVariants> {
   asChild?: boolean
-  isActive?: boolean // Añade esta línea
+  isActive?: boolean
 }
 
-const SidebarMenuSubItem = React.forwardRef<
+const SidebarMenuSubItem = React.forwardRef
   HTMLDivElement,
   SidebarMenuSubItemProps
 >(({ className, asChild = false, ...props }, ref) => {
@@ -284,7 +283,7 @@ interface SidebarSeparatorProps
   asChild?: boolean
 }
 
-const SidebarSeparator = React.forwardRef<
+const SidebarSeparator = React.forwardRef
   HTMLDivElement,
   SidebarSeparatorProps
 >(({ className, asChild = false, ...props }, ref) => {
@@ -300,11 +299,11 @@ const SidebarSeparator = React.forwardRef<
 SidebarSeparator.displayName = "SidebarSeparator"
 
 const SidebarProvider = ({ children }: { children: React.ReactNode }) => {
-  return <>{children}</>
+  return <div className="flex w-full h-screen">{children}</div>
 }
 
 const SidebarInset = ({ children }: { children: React.ReactNode }) => {
-  return <>{children}</>
+  return <div className="flex-1 overflow-hidden">{children}</div>
 }
 
 interface SidebarTriggerProps
@@ -317,7 +316,7 @@ const SidebarTrigger = ({ children, className, ...props }: SidebarTriggerProps) 
   return (
     <Button
       variant="ghost"
-      className={cn(className)}
+      className={cn("relative z-50", className)}
       {...props}
     >
       {children}
