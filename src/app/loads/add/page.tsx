@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Icons } from '@/components/icons';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { SettingsSheet } from '@/app/components/settings-sheet';
-import { MainSidebar } from '../../components/main-sidebar';
+import { MainSidebar } from '@/components/main-sidebar';
 import { useAuth } from '@/firebase';
 import { useFirebase } from '@/firebase/provider';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
