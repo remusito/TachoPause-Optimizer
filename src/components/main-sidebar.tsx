@@ -166,7 +166,7 @@ export function MainSidebar() {
           TachoPause {isPremium ? <span className='text-primary'>Premium</span> : <span className='text-sm font-normal'>Optimizer</span>}
         </h1>
       </div>
-      <SidebarContent asChild>
+      <SidebarContent>
         <nav className="flex flex-col gap-2 p-4">
           {menuStructure.map((item) => {
             if ('items' in item && Array.isArray(item.items)) {
