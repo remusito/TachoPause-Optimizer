@@ -8,6 +8,9 @@ import {
   SidebarMenuItem,
   SidebarFooter,
   SidebarSeparator,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
 } from '@/components/ui/sidebar';
 import { Icons } from '@/components/icons';
 import { useAuth } from '@/firebase';
@@ -27,17 +30,72 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { ChevronDown } from 'lucide-react';
 
-const menuItems = [
-  { href: '/', icon: Icons.Play, label: 'Temporizador' },
-  { href: '/speedometer', icon: Icons.Speedometer, label: 'Velocímetro GPS' },
-  { href: '/route-calculator', icon: Icons.Calculator, label: 'Calculadora de Ruta', premium: true },
-  { href: '/route-optimizer', icon: Icons.Route, label: 'Buscador de Paradas', premium: true },
-  { href: '/telephones', icon: Icons.Phone, label: 'Teléfonos', premium: true },
-  { href: '/history', icon: Icons.History, label: 'Historial', premium: false },
-  { href: '/stats', icon: Icons.BarChart, label: 'Estadísticas', premium: false },
-  { href: '/tutorial', icon: Icons.BookOpen, label: 'Tutorial' },
-  { href: '/rewards', icon: Icons.Award, label: 'Recompensas' },
+// Estructura del menú con grupos y submenús
+const menuStructure = [
+  { 
+    href: '/', 
+    icon: Icons.Play, 
+    label: 'Temporizador',
+    premium: false 
+  },
+  {
+    label: 'Vehículo',
+    icon: Icons.Truck,
+    items: [
+      { href: '/speedometer', icon: Icons.Speedometer, label: 'Velocímetro GPS', premium: false },
+      { href: '/maintenance', icon: Icons.Wrench, label: 'Mantenimiento', premium: true },
+    ]
+  },
+  {
+    label: 'Rutas',
+    icon: Icons.Route,
+    items: [
+      { href: '/route-calculator', icon: Icons.Calculator, label: 'Calculadora', premium: true },
+      { href: '/route-optimizer', icon: Icons.MapPin, label: 'Buscador de Paradas', premium: true },
+    ]
+  },
+  { 
+    href: '/loads', 
+    icon: Icons.Package, 
+    label: 'Mercancías',
+    premium: false 
+  },
+  { 
+    href: '/telephones', 
+    icon: Icons.Phone, 
+    label: 'Teléfonos',
+    premium: true 
+  },
+  {
+    label: 'Mis Datos',
+    icon: Icons.BarChart,
+    items: [
+      { href: '/history', icon: Icons.History, label: 'Historial', premium: false },
+      { href: '/stats', icon: Icons.BarChart, label: 'Estadísticas', premium: false },
+    ]
+  },
+  {
+    label: 'Información',
+    icon: Icons.BookOpen,
+    items: [
+      { href: '/tutorial', icon: Icons.BookOpen, label: 'Tutorial', premium: false },
+      { href: '/regulations', icon: Icons.FileText, label: 'Reglamento', premium: false },
+    ]
+  },
+  { 
+    href: '/rewards', 
+    icon: Icons.Award, 
+    label: 'Recompensas',
+    premium: false 
+  },
 ];
 
 export function MainSidebar() {
@@ -45,6 +103,15 @@ export function MainSidebar() {
   const { user, loading, signOut } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+  const [openGroups, setOpenGroups] = useState<string[]>([]);
+
+  const toggleGroup = (label: string) => {
+    setOpenGroups(prev => 
+      prev.includes(label) 
+        ? prev.filter(g => g !== label)
+        : [...prev, label]
+    );
+  };
 
   const AuthButton = () => {
     if (loading) {
@@ -71,7 +138,18 @@ export function MainSidebar() {
                     {user.displayName && <p className="text-xs leading-none text-muted-foreground truncate">{user.email}</p>}
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={signOut}>
+                <DropdownMenuItem 
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    try {
+                      await signOut();
+                      router.push('/login');
+                    } catch (error) {
+                      console.error('Error al cerrar sesión:', error);
+                    }
+                  }}
+                  className="cursor-pointer"
+                >
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Cerrar Sesión</span>
                 </DropdownMenuItem>
@@ -87,17 +165,54 @@ export function MainSidebar() {
     );
   };
 
-  return (
-    <Sidebar>
-      <div className="flex items-center gap-2 p-4 border-b">
-        <Icons.Truck className="h-6 w-6 text-primary" />
-        <h1 className="text-lg sm:text-xl font-bold text-foreground">
-          TachoPause {isPremium ? <span className='text-primary'>Premium</span> : <span className='text-sm font-normal'>Optimizer</span>}
-        </h1>
-      </div>
-      <SidebarContent>
-        <SidebarMenu>
-          {menuItems.map((item) => (
+  const menuContent = (
+    <SidebarMenu>
+      {menuStructure.map((item) => {
+        // Si tiene items, es un grupo collapsible
+        if ('items' in item && Array.isArray(item.items)) {
+          const isOpen = openGroups.includes(item.label);
+          const hasActiveChild = item.items.some(child => pathname === child.href);
+          
+          return (
+            <Collapsible
+              key={item.label}
+              open={isOpen || hasActiveChild}
+              onOpenChange={() => toggleGroup(item.label)}
+            >
+              <SidebarMenuItem>
+                <CollapsibleTrigger asChild>
+                  <SidebarMenuButton>
+                    <item.icon />
+                    <span>{item.label}</span>
+                    <ChevronDown className={`ml-auto transition-transform ${isOpen || hasActiveChild ? 'rotate-180' : ''}`} />
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarMenuSub>
+                    {item.items.map((subItem) => (
+                      <SidebarMenuSubItem key={subItem.href}>
+                        <SidebarMenuSubButton
+                          asChild
+                          isActive={pathname === subItem.href}
+                        >
+                          <Link href={subItem.href}>
+                            <subItem.icon />
+                            <span>{subItem.label}</span>
+                            {(subItem.premium && !isPremium) && <Icons.Premium className="ml-auto" />}
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    ))}
+                  </SidebarMenuSub>
+                </CollapsibleContent>
+              </SidebarMenuItem>
+            </Collapsible>
+          );
+        }
+        
+        // Si no tiene items, es un link simple
+        if ('href' in item && item.href) {
+          return (
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
                 asChild
@@ -110,8 +225,24 @@ export function MainSidebar() {
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
+          );
+        }
+        
+        return null;
+      })}
+    </SidebarMenu>
+  );
+
+  return (
+    <Sidebar>
+      <div className="flex items-center gap-2 p-4 border-b">
+        <Icons.Truck className="h-6 w-6 text-primary" />
+        <h1 className="text-lg sm:text-xl font-bold text-foreground">
+          TachoPause {isPremium ? <span className='text-primary'>Premium</span> : <span className='text-sm font-normal'>Optimizer</span>}
+        </h1>
+      </div>
+      <SidebarContent asChild>
+        {menuContent}
       </SidebarContent>
       <SidebarFooter>
         <SidebarSeparator />
