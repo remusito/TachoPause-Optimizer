@@ -1,10 +1,8 @@
-
 'use client';
 
 import {
   Sidebar,
   SidebarContent,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -29,7 +27,6 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 
 const menuItems = [
   { href: '/', icon: Icons.Play, label: 'Temporizador' },
@@ -92,40 +89,12 @@ export function MainSidebar() {
 
   return (
     <Sidebar>
-return (
-  <Sidebar>
-    <div className="flex items-center gap-2 p-4 border-b">
-      <Icons.Truck className="h-6 w-6 text-primary" />
-      <h1 className="text-lg sm:text-xl font-bold text-foreground">
-        TachoPause {isPremium ? <span className='text-primary'>Premium</span> : <span className='text-sm font-normal'>Optimizer</span>}
-      </h1>
-    </div>
-    <SidebarContent>
-      <SidebarMenu>
-        {menuItems.map((item) => (
-          <SidebarMenuItem key={item.href}>
-            <SidebarMenuButton
-              asChild
-              isActive={pathname === item.href}
-            >
-              <Link href={item.href}>
-                <item.icon />
-                <span>{item.label}</span>
-                {(item.premium && !isPremium) && <Icons.Premium className="ml-auto" />}
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        ))}
-      </SidebarMenu>
-    </SidebarContent>
-    <SidebarFooter>
-      <SidebarSeparator />
-      <div className="p-2">
-         <AuthButton />
+      <div className="flex items-center gap-2 p-4 border-b">
+        <Icons.Truck className="h-6 w-6 text-primary" />
+        <h1 className="text-lg sm:text-xl font-bold text-foreground">
+          TachoPause {isPremium ? <span className='text-primary'>Premium</span> : <span className='text-sm font-normal'>Optimizer</span>}
+        </h1>
       </div>
-    </SidebarFooter>
-  </Sidebar>
-);
       <SidebarContent>
         <SidebarMenu>
           {menuItems.map((item) => (
