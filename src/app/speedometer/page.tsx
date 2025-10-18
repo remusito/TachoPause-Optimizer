@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
@@ -13,18 +12,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Icons } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from '@/components/ui/sidebar';
 import { SettingsSheet } from '../components/settings-sheet';
 import { cn } from '@/lib/utils';
-import { MainSidebar } from '@/components/main-sidebar';
+import { MainSidebar } from '@/components/ui/sidebar';
 import { useAchievements } from '@/hooks/use-achievements-provider';
 import { addHistoryItem } from '@/lib/data';
 import { useAuth, useFirestore } from '@/firebase';
-
 
 // Helper to calculate distance between two lat/lon points in meters (Haversine formula)
 function calculateDistance(
@@ -237,105 +230,99 @@ export default function SpeedometerPage() {
   }, []);
 
   return (
-    <SidebarProvider>
+    <div className="flex min-h-dvh">
       <MainSidebar />
-      <SidebarInset>
-        <div className="flex flex-col items-center justify-center min-h-dvh bg-background text-foreground relative">
-           <header className="absolute top-0 left-0 w-full p-4 sm:p-6 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <SidebarTrigger className="md:hidden">
-                <Icons.Menu />
-              </SidebarTrigger>
-              <Icons.Speedometer className="h-6 w-6 text-primary" />
-              <h1 className="text-lg sm:text-xl font-bold text-foreground">
-                Velocímetro GPS
-              </h1>
-            </div>
-            <SettingsSheet />
-          </header>
-          <main className='flex flex-1 flex-col items-center justify-center w-full px-4 gap-4 pt-20 pb-16'>
-            <Card className="w-full max-w-sm text-center border-none shadow-2xl bg-card/80 backdrop-blur-sm dark:bg-card/50">
-              <CardHeader>
-                <CardTitle className="text-2xl">Velocidad Actual</CardTitle>
-                 {error && <CardDescription className="text-destructive">{error}</CardDescription>}
-              </CardHeader>
-              <CardContent className="flex justify-center items-center py-4">
-                <div className="relative w-56 h-56">
-                   <svg className="w-full h-full" viewBox="0 0 250 250">
-                    <circle cx="125" cy="125" r="100" className="stroke-border" strokeWidth="15" fill="transparent" />
-                    <circle
-                      cx="125"
-                      cy="125"
-                      r="100"
-                      className={cn( 'transition-all duration-300', isTracking ? 'stroke-primary' : 'stroke-muted' )}
-                      strokeWidth="15"
-                      fill="transparent"
-                      strokeDasharray="628.32"
-                      strokeDashoffset={628.32 - (speed / 150) * 628.32} // Max speed 150km/h
-                      strokeLinecap="round"
-                      transform="rotate(-90 125 125)"
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-7xl font-bold font-headline tracking-tighter text-primary">
-                      {speed}
-                    </span>
-                    <span className="text-lg text-muted-foreground">km/h</span>
-                  </div>
+      <div className="flex-1 flex flex-col items-center justify-center bg-background text-foreground relative">
+        <header className="absolute top-0 left-0 w-full p-4 sm:p-6 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Icons.Speedometer className="h-6 w-6 text-primary" />
+            <h1 className="text-lg sm:text-xl font-bold text-foreground">
+              Velocímetro GPS
+            </h1>
+          </div>
+          <SettingsSheet />
+        </header>
+        <main className='flex flex-1 flex-col items-center justify-center w-full px-4 gap-4 pt-20 pb-16'>
+          <Card className="w-full max-w-sm text-center border-none shadow-2xl bg-card/80 backdrop-blur-sm dark:bg-card/50">
+            <CardHeader>
+              <CardTitle className="text-2xl">Velocidad Actual</CardTitle>
+              {error && <CardDescription className="text-destructive">{error}</CardDescription>}
+            </CardHeader>
+            <CardContent className="flex justify-center items-center py-4">
+              <div className="relative w-56 h-56">
+                <svg className="w-full h-full" viewBox="0 0 250 250">
+                  <circle cx="125" cy="125" r="100" className="stroke-border" strokeWidth="15" fill="transparent" />
+                  <circle
+                    cx="125"
+                    cy="125"
+                    r="100"
+                    className={cn( 'transition-all duration-300', isTracking ? 'stroke-primary' : 'stroke-muted' )}
+                    strokeWidth="15"
+                    fill="transparent"
+                    strokeDasharray="628.32"
+                    strokeDashoffset={628.32 - (speed / 150) * 628.32} // Max speed 150km/h
+                    strokeLinecap="round"
+                    transform="rotate(-90 125 125)"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-7xl font-bold font-headline tracking-tighter text-primary">
+                    {speed}
+                  </span>
+                  <span className="text-lg text-muted-foreground">km/h</span>
                 </div>
-              </CardContent>
-               <CardFooter className="flex flex-col gap-4">
-                  <div className="flex gap-4 justify-center">
-                    <Button
-                      size="lg"
-                      className="w-40"
-                      onClick={handleToggleTracking}
-                      variant={isTracking ? 'destructive' : 'default'}
-                    >
-                      {isTracking ? <Icons.Pause className="mr-2" /> : <Icons.Play className="mr-2" />}
-                      {isTracking ? 'Detener' : 'Iniciar'}
-                    </Button>
-                  </div>
-                   {!user && <p className="text-xs text-muted-foreground">Inicia sesión para guardar tus viajes</p>}
-              </CardFooter>
-            </Card>
+              </div>
+            </CardContent>
+            <CardFooter className="flex flex-col gap-4">
+              <div className="flex gap-4 justify-center">
+                <Button
+                  size="lg"
+                  className="w-40"
+                  onClick={handleToggleTracking}
+                  variant={isTracking ? 'destructive' : 'default'}
+                >
+                  {isTracking ? <Icons.Pause className="mr-2" /> : <Icons.Play className="mr-2" />}
+                  {isTracking ? 'Detener' : 'Iniciar'}
+                </Button>
+              </div>
+              {!user && <p className="text-xs text-muted-foreground">Inicia sesión para guardar tus viajes</p>}
+            </CardFooter>
+          </Card>
 
-             <Card className="w-full max-w-sm">
-                <CardHeader>
-                    <CardTitle>Resumen de la Sesión Actual</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 grid grid-cols-2 gap-4 text-center">
-                    <div className="flex flex-col items-center gap-1">
-                        <Icons.Gauge className="h-6 w-6 text-primary"/>
-                        <p className="text-xs text-muted-foreground">Vel. Máxima</p>
-                        <p className="font-bold text-lg">{maxSpeed} <span className="text-sm font-normal">km/h</span></p>
-                    </div>
-                    <div className="flex flex-col items-center gap-1">
-                        <Icons.Gauge className="h-6 w-6 text-primary"/>
-                        <p className="text-xs text-muted-foreground">Vel. Media</p>
-                        <p className="font-bold text-lg">{averageSpeed} <span className="text-sm font-normal">km/h</span></p>
-                    </div>
-                     <div className="flex flex-col items-center gap-1">
-                        <Icons.Milestone className="h-6 w-6 text-primary"/>
-                        <p className="text-xs text-muted-foreground">Distancia</p>
-                        <p className="font-bold text-lg">{(distance / 1000).toFixed(2)} <span className="text-sm font-normal">km</span></p>
-                    </div>
-                     <div className="flex flex-col items-center gap-1">
-                        <Icons.Timer className="h-6 w-6 text-primary"/>
-                        <p className="text-xs text-muted-foreground">Tiempo</p>
-                        <p className="font-bold text-lg">{formatTime(elapsedTime)}</p>
-                    </div>
-                </CardContent>
-            </Card>
-
-           </main>
-           <footer className="w-full text-center p-4 absolute bottom-0">
-            <p className="text-xs text-muted-foreground">
-              La precisión de la velocidad depende del GPS de tu dispositivo.
-            </p>
-          </footer>
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+          <Card className="w-full max-w-sm">
+            <CardHeader>
+              <CardTitle>Resumen de la Sesión Actual</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 grid grid-cols-2 gap-4 text-center">
+              <div className="flex flex-col items-center gap-1">
+                <Icons.Gauge className="h-6 w-6 text-primary"/>
+                <p className="text-xs text-muted-foreground">Vel. Máxima</p>
+                <p className="font-bold text-lg">{maxSpeed} <span className="text-sm font-normal">km/h</span></p>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <Icons.Gauge className="h-6 w-6 text-primary"/>
+                <p className="text-xs text-muted-foreground">Vel. Media</p>
+                <p className="font-bold text-lg">{averageSpeed} <span className="text-sm font-normal">km/h</span></p>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <Icons.Milestone className="h-6 w-6 text-primary"/>
+                <p className="text-xs text-muted-foreground">Distancia</p>
+                <p className="font-bold text-lg">{(distance / 1000).toFixed(2)} <span className="text-sm font-normal">km</span></p>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <Icons.Timer className="h-6 w-6 text-primary"/>
+                <p className="text-xs text-muted-foreground">Tiempo</p>
+                <p className="font-bold text-lg">{formatTime(elapsedTime)}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </main>
+        <footer className="w-full text-center p-4 absolute bottom-0">
+          <p className="text-xs text-muted-foreground">
+            La precisión de la velocidad depende del GPS de tu dispositivo.
+          </p>
+        </footer>
+      </div>
+    </div>
   );
 }
