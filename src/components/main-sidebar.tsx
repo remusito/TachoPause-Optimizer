@@ -226,12 +226,9 @@ export function MainSidebar() {
           })}
         </nav>
       </div>
-      <SidebarFooter>
-        <SidebarSeparator />
-        <div className="p-2">
-           <AuthButton />
-        </div>
-      </SidebarFooter>
+      <div className="border-t mt-auto p-2">
+        <AuthButton />
+      </div>
     </Sidebar>
   );
 }
