@@ -2,8 +2,6 @@
 
 import {
   Sidebar,
-  SidebarFooter,
-  SidebarSeparator,
 } from '@/components/ui/sidebar';
 import { Icons } from '@/components/icons';
 import { useAuth } from '@/firebase';
