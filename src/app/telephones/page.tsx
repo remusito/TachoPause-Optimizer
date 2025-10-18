@@ -73,7 +73,7 @@ export default function TelephonesPage() {
         </div>
         <SettingsSheet />
       </header>
-      <main className="flex-1 flex flex-col items-center justify-center w-full p-4 sm:p-6 gap-6">
+      <main className="flex-1 flex flex-col items-center w-full p-4 sm:p-6 gap-6">
         <PremiumPlaceholder
           title="Directorio Telefónico Premium"
           description="Accede a la lista de contactos de la empresa directamente desde la app."
@@ -89,14 +89,14 @@ export default function TelephonesPage() {
                   key={index}
                   className="flex items-center justify-between p-3 rounded-lg border bg-muted/50"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-4">
                     <Icons.Phone className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <p className="font-semibold text-base">{contact.name}</p>
+                      <p className="font-semibold">{contact.name}</p>
                       <p className="text-sm text-primary font-mono">{contact.extension}</p>
                     </div>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => handleCall(contact.extension)} className="w-full sm:w-auto">
+                  <Button variant="outline" size="sm" onClick={() => handleCall(contact.extension)} className="min-w-[100px]">
                     <Icons.Phone className="mr-2 h-4 w-4" />
                     Llamar
                   </Button>
