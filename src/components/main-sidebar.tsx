@@ -92,7 +92,7 @@ export function MainSidebar() {
 
   return (
     <Sidebar>
-<SidebarHeader asChild>
+<SidebarHeader>
   <div className="flex items-center gap-2">
     <Icons.Truck className="h-6 w-6 text-primary" />
     <h1 className="text-lg sm:text-xl font-bold text-foreground">
